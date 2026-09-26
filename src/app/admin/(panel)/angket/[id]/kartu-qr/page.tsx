@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import QRCode from 'qrcode';
 import PrintButton from '@/components/admin/PrintButton';
+import { showSchoolLine } from '@/components/Brand';
 import { requireAdmin } from '@/lib/auth';
 import { getSettings, toBrand } from '@/lib/settings';
 import { roleDetail } from '@/lib/text';
@@ -70,7 +71,7 @@ export default async function QrPage({
               <div className="d-flex align-items-center gap-2 justify-content-center mb-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={brand.logo} width={26} height={24} alt="" className="logo" />
-                <div className="small fw-bold text-start lh-sm">{brand.appName}<div className="fw-normal text-secondary" style={{ fontSize: '.7rem' }}>{brand.schoolName}</div></div>
+                <div className="small fw-bold text-start lh-sm">{brand.appName}{showSchoolLine(brand) && <div className="fw-normal text-secondary" style={{ fontSize: '.7rem' }}>{brand.schoolName}</div>}</div>
               </div>
               <div className="small fw-semibold mb-1">{form.title}</div>
               {/* eslint-disable-next-line @next/next/no-img-element */}

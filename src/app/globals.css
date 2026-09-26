@@ -43,7 +43,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--tinta); }
 .logo { object-fit: contain; flex: none; }
 
 /* Merek */
-.brand-name { font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+.brand-name { font-weight: 800; letter-spacing: -.01em; line-height: 1.2; overflow-wrap: anywhere; }
 .brand-sub { font-size: .78rem; opacity: .75; }
 .page-title { font-weight: 800; letter-spacing: -.02em; }
 
@@ -72,6 +72,22 @@ h1, h2, h3, h4, h5, h6 { color: var(--tinta); }
 .stat-card .num { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
 .list-card { background: #fff; border: 1px solid var(--garis); border-radius: .75rem; padding: .9rem 1rem; }
 .toast-float { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 1090; min-width: 260px; max-width: calc(100% - 24px); }
+
+/* ============ Login admin (Desain Laut) ============ */
+.login-laut { min-height: 100vh; min-height: 100dvh; background: var(--laut); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(36px + env(safe-area-inset-top, 0px)) 16px calc(120px + env(safe-area-inset-bottom, 0px)); }
+.login-laut .waves { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 160px; pointer-events: none; }
+.login-laut .head { text-align: center; color: #fff; margin-bottom: 22px; position: relative; z-index: 1; max-width: 460px; }
+.login-laut .head h1 { color: #fff; font-weight: 800; font-size: clamp(1.35rem, 4.5vw, 1.75rem); letter-spacing: -.015em; line-height: 1.25; margin: 12px 0 2px; }
+.login-laut .head .sch { color: #cfe1fb; font-weight: 600; }
+.login-laut .head .logo { filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
+.login-laut .card-l { width: 100%; max-width: 400px; background: #fff; border-radius: 20px; padding: 28px 24px; box-shadow: 0 24px 60px -24px rgba(0,0,0,.55); position: relative; z-index: 1; }
+.login-laut .credit { position: relative; z-index: 1; }
+.pw-wrap { position: relative; }
+.pw-wrap .form-control { padding-right: 3rem; }
+.pw-eye { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; width: 40px; height: 40px; border-radius: 8px; color: var(--abu, #5a6679); display: grid; place-items: center; font-size: 1.15rem; }
+.pw-eye:hover { background: #EEF2F7; color: var(--laut); }
+.pw-eye[aria-pressed="true"] { color: var(--laut); }
+.caps { font-size: .8rem; color: #7A5A00; background: #FFF4CC; border-radius: 8px; padding: .3rem .6rem; margin-top: .5rem; display: inline-block; }
 
 /* ============ Editor ============ */
 .design-bar { background: #fff; border-bottom: 1px solid var(--garis); }
@@ -143,7 +159,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--tinta); }
 
 /* Kredit pembuat */
 .credit { font-size: .75rem; color: #6b7a90; text-align: center; margin: 24px 0 0; }
-.credit.light { color: rgba(255,255,255,.55); text-align: left; margin-top: 8px; }
+.credit.light { color: rgba(255,255,255,.6); text-align: left; margin-top: 8px; }
+.credit.light.text-center { text-align: center; }
 .ob-input .credit { margin: 6px 0 0; font-size: .7rem; }
 
 /* ============ Halaman isi: Desain A ============ */

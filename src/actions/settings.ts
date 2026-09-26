@@ -10,7 +10,7 @@ export async function saveSettings(formData: FormData) {
   const s = (k: string) => String(formData.get(k) ?? '').trim();
 
   const update: Record<string, unknown> = {
-    app_name: s('app_name') || 'Gerakan Literasi Sekolah',
+    app_name: s('app_name') || 'Angket SMKN 3 Kepulauan Selayar',
     school_name: s('school_name') || 'SMKN 3 Kepulauan Selayar',
     default_fill_design: s('default_fill_design') === 'B' ? 'B' : 'A',
     editor_view: s('editor_view') === 'kartu' ? 'kartu' : 'panel',

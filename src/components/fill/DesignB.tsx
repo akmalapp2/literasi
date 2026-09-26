@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Logo } from '@/components/Brand';
+import { Logo, showSchoolLine } from '@/components/Brand';
 import { endLabel, filled, fmtAnswer, makeOther, otherLabel, problem, startLabel } from '@/lib/answers';
 import { addressee, greetingName, personalize } from '@/lib/text';
 import type { DesignProps } from './types';
@@ -234,8 +234,8 @@ export default function DesignB(p: DesignProps) {
       <div className="ob-head d-flex align-items-center gap-2">
         <Logo brand={brand} size={38} alt={`Logo ${brand.schoolName}`} />
         <div className="flex-grow-1 min-w-0">
-          <div className="fw-bold lh-sm text-truncate">{brand.appName}</div>
-          <div className="small text-secondary text-truncate">{brand.schoolName}</div>
+          <div className="fw-bold lh-sm">{brand.appName}</div>
+          {showSchoolLine(brand) && <div className="small text-secondary text-truncate">{brand.schoolName}</div>}
         </div>
         {p.who && (
           <div className="text-end small d-none d-sm-block">

@@ -2,14 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Credit from '@/components/Credit';
+import { showSchoolLine } from '@/components/Brand';
 import { createClient } from '@/lib/supabase/client';
 import type { Brand } from '@/lib/types';
-import Credit from '@/components/Credit';
 
+/** Halaman login admin — Desain 3 "Laut": latar biru penuh, gelombang, kartu putih di tengah. */
 export default function LoginForm({ brand, next, notAdmin }: { brand: Brand; next: string; notAdmin: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
+  const [caps, setCaps] = useState(false);
   const [error, setError] = useState<string | null>(notAdmin ? 'Akun ini bukan admin. Hubungi pengelola aplikasi.' : null);
   const [busy, setBusy] = useState(false);
 
@@ -28,30 +32,49 @@ export default function LoginForm({ brand, next, notAdmin }: { brand: Brand; nex
     router.refresh();
   };
 
+  const capsCheck = (e: React.KeyboardEvent<HTMLInputElement>) => setCaps(e.getModifierState('CapsLock'));
+
   return (
-    <div className="container py-5" style={{ maxWidth: 420 }}>
-      <div className="text-center mb-4">
+    <div className="login-laut">
+      <svg className="waves" viewBox="0 0 1200 160" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 70 C200 30 400 30 600 70 S1000 110 1200 70 V160 H0Z" fill="#1D4696" opacity=".55" />
+        <path d="M0 105 C220 75 420 75 620 105 S1000 135 1200 105 V160 H0Z" fill="#7FBAF5" opacity=".35" />
+      </svg>
+
+      <div className="head">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="logo mb-3" src={brand.logo} width={92} height={86} alt={`Logo ${brand.schoolName}`} />
-        <h1 className="h4 page-title mb-1">{brand.appName}</h1>
-        <p className="text-secondary mb-0">{brand.schoolName}</p>
+        <img className="logo" src={brand.logo} width={96} height={89} alt={`Logo ${brand.schoolName}`} />
+        <h1>{brand.appName}</h1>
+        {showSchoolLine(brand) && <div className="sch">{brand.schoolName}</div>}
       </div>
-      <form className="card border-0 shadow-sm" onSubmit={submit}>
-        <div className="card-body p-4">
-          <label className="form-label fw-semibold" htmlFor="em">Email admin</label>
-          <input id="em" type="email" className="form-control mb-3" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          <label className="form-label fw-semibold" htmlFor="pw">Kata sandi</label>
-          <input id="pw" type="password" className="form-control mb-3" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-          {error && <div className="alert alert-danger py-2 small" role="alert">{error}</div>}
-          <button className="btn btn-primary w-100" disabled={busy}>
-            {busy && <span className="spinner-border spinner-border-sm me-2" />}Masuk
+
+      <form className="card-l" onSubmit={submit}>
+        <h2 className="h4 fw-bold mb-1">Masuk admin</h2>
+        <p className="text-secondary mb-4">Masukkan email dan kata sandi Anda.</p>
+
+        <label className="form-label fw-semibold" htmlFor="em">Email</label>
+        <input id="em" type="email" className="form-control form-control-lg mb-3" autoComplete="username" required
+          placeholder="nama@sekolah.sch.id" value={email} onChange={(e) => setEmail(e.target.value)} />
+
+        <label className="form-label fw-semibold" htmlFor="pw">Kata sandi</label>
+        <div className="pw-wrap">
+          <input id="pw" type={show ? 'text' : 'password'} className="form-control form-control-lg" autoComplete="current-password" required
+            value={password} onChange={(e) => setPassword(e.target.value)} onKeyUp={capsCheck} onKeyDown={capsCheck} onBlur={() => setCaps(false)} />
+          <button type="button" className="pw-eye" aria-pressed={show} aria-controls="pw"
+            aria-label={show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'} title={show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+            onClick={() => setShow((v) => !v)}>
+            <i className={`bi ${show ? 'bi-eye-slash' : 'bi-eye'}`} />
           </button>
         </div>
+        {caps && <div className="caps"><i className="bi bi-capslock-fill me-1" />Caps Lock menyala</div>}
+
+        {error && <div className="alert alert-danger py-2 small mt-3 mb-0" role="alert">{error}</div>}
+        <button className="btn btn-primary btn-lg w-100 mt-4" disabled={busy}>
+          {busy && <span className="spinner-border spinner-border-sm me-2" />}Masuk
+        </button>
       </form>
-      <p className="small text-secondary text-center mt-3">
-        Halaman ini khusus admin. Responden mengisi angket lewat link, kode, atau QR yang dibagikan sekolah.
-      </p>
-      <Credit />
+
+      <Credit light className="text-center" />
     </div>
   );
 }

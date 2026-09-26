@@ -4,7 +4,7 @@ import { createAdminClient } from './supabase/admin';
 import type { Brand, Settings } from './types';
 
 const DEFAULTS: Settings = {
-  app_name: 'Gerakan Literasi Sekolah',
+  app_name: 'Angket SMKN 3 Kepulauan Selayar',
   school_name: 'SMKN 3 Kepulauan Selayar',
   logo_url: null,
   default_fill_design: 'A',
