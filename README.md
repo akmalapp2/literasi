@@ -86,5 +86,19 @@ Buat widget di dasbor Cloudflare → Turnstile, lalu isi `NEXT_PUBLIC_TURNSTILE_
 ## Tips teks pertanyaan
 Tulis `{kamu}` agar otomatis menjadi "kamu" (siswa), "Anda" (alumni, masyarakat umum), atau "Bapak/Ibu" (peran lainnya), dan `{tugas}` menjadi "jam pelajaran" / "tugas mengajar" / "tugas dinas".
 
+## Menjaga Supabase gratis agar tidak "tidur"
+Proyek Supabase paket gratis di-pause setelah sekitar 7 hari tanpa aktivitas. Aplikasi ini punya endpoint `/api/health` yang menyentuh database sekali (ringan, aman diakses publik). Ada dua cara memanggilnya berkala. Pilih salah satu.
+
+**Cara A — GitHub Actions (sudah termasuk, gratis):**
+1. Setelah kode di GitHub, buka repo → **Settings → Secrets and variables → Actions → New repository secret**.
+2. Name: `HEALTH_URL`, Value: `https://ALAMAT-APLIKASI-ANDA.vercel.app/api/health`.
+3. Selesai. Berkas `.github/workflows/keepalive.yml` otomatis ping tiap 3 hari. Bisa diuji manual di tab **Actions → Keepalive Supabase → Run workflow**.
+
+**Cara B — UptimeRobot (tanpa GitHub):**
+1. Daftar gratis di https://uptimerobot.com.
+2. **Add New Monitor** → Type: HTTP(s) → URL: `https://ALAMAT-APLIKASI-ANDA.vercel.app/api/health` → Monitoring interval 5–60 menit → **Create**.
+
+Pastikan email akun Supabase aktif dipantau; Supabase mengirim peringatan sebelum mem-pause. Cara paling pasti bebas pause adalah upgrade ke Supabase Pro.
+
 ## Kredit
 Hak cipta © Akmal Iskandar, S.Pi
