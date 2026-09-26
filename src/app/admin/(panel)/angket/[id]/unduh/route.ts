@@ -59,7 +59,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
-  const head = ['Waktu kirim', 'Nama', 'Nomor induk', 'Peran', 'Kelas/keterangan', ...(qs ?? []).map((q) => q.title as string)];
+  const head = ['Waktu kirim', 'Nama', 'NIT/NIP', 'Peran', 'Kelas/keterangan', ...(qs ?? []).map((q) => q.title as string)];
   const lines = [head.map(csv).join(',')];
   for (const r of responses) {
     const a = answers.get(r.id);

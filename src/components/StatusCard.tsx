@@ -1,5 +1,6 @@
 import type { Brand } from '@/lib/types';
 import { BrandMark } from './Brand';
+import Credit from '@/components/Credit';
 
 type Props = {
   brand: Brand;
@@ -28,6 +29,7 @@ export default function StatusCard({ brand, icon, tone = 'info', title, text, ch
         <h1 className="q-big mb-2">{title}</h1>
         <p className="text-secondary">{text}</p>
         {children}
+        <Credit />
       </div>
     </div>
   );

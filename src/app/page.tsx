@@ -5,6 +5,7 @@ import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatDay } from '@/lib/text';
 import type { FormRow } from '@/lib/types';
+import Credit from '@/components/Credit';
 
 export default async function Home() {
   const brand = toBrand(await getSettings());
@@ -58,9 +59,7 @@ export default async function Home() {
             </div>
           )}
         </section>
-        <p className="small text-secondary mt-5">
-          Responden mengisi angket lewat link, kode, atau QR dari sekolah. <Link href="/admin">Masuk admin</Link>
-        </p>
+        <Credit className="mt-5" />
       </main>
     </div>
   );

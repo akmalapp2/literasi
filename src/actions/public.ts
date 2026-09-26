@@ -3,28 +3,40 @@
 import { redirect } from 'next/navigation';
 import { formWindow } from '@/lib/form-window';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { needsId } from '@/lib/access';
 import { filled, isOther, otherText, problem } from '@/lib/answers';
+import { ROLE_LABEL, idShort } from '@/lib/text';
 import { generateToken } from '@/lib/token';
 import { verifyTurnstile } from '@/lib/turnstile';
-import type { ActionResult, AnswerValue, Answers, Question, Role } from '@/lib/types';
+import { ROLES, type ActionResult, type AnswerValue, type Answers, type Question, type Role } from '@/lib/types';
 
-/* ---------- Mode "Kode angket + nomor induk" ---------- */
-export async function enterWithCode(_prev: { error: string } | null, formData: FormData): Promise<{ error: string }> {
-  const slug = String(formData.get('slug') ?? '').trim();
-  const code = String(formData.get('code') ?? '').trim().toUpperCase();
-  const identifier = String(formData.get('identifier') ?? '').trim();
-  if (!code || !identifier) return { error: 'Isi kode angket dan nomor induk.' };
+/* ---------- Masuk dengan nomor induk (mode Kode, atau Terbuka + NIT/NIP) ---------- */
+export type IdentifyInput = { slug: string; role: Role; code?: string | null; identifier: string };
+
+/** Cocokkan peran + nomor induk (+ kode angket), lalu arahkan ke link pribadi /isi/[token]. */
+export async function identify(input: IdentifyInput): Promise<{ error: string }> {
+  const role = input.role;
+  const identifier = String(input.identifier ?? '').trim();
+  const code = String(input.code ?? '').trim().toUpperCase();
+  if (!ROLES.includes(role)) return { error: 'Pilih peran terlebih dahulu.' };
+  if (!identifier) return { error: `Isi ${idShort(role)} terlebih dahulu.` };
 
   const db = createAdminClient();
   const { data: form } = await db
     .from('forms')
-    .select('id, access_mode, access_code, targets, status, opens_at, closes_at')
-    .eq('slug', slug)
+    .select('id, access_mode, access_code, open_id, targets, status, opens_at, closes_at')
+    .eq('slug', input.slug)
     .maybeSingle();
-  if (!form || form.access_mode !== 'kode') return { error: 'Angket tidak ditemukan.' };
+  if (!form || form.access_mode === 'token') return { error: 'Angket tidak ditemukan.' };
   const w = formWindow(form);
   if (!w.open) return { error: w.title + '.' };
-  if ((form.access_code ?? '').toUpperCase() !== code) return { error: 'Kode angket salah.' };
+  if (!(form.targets as Role[]).includes(role)) return { error: `Pengisian ini bukan untuk ${ROLE_LABEL[role]}.` };
+  if (form.access_mode === 'kode') {
+    if (!code) return { error: 'Isi kode angket.' };
+    if ((form.access_code ?? '').toUpperCase() !== code) return { error: 'Kode angket salah.' };
+  } else if (!needsId(form, role)) {
+    return { error: 'Peran ini tidak perlu nomor induk. Muat ulang halaman.' };
+  }
 
   const { data: person } = await db
     .from('respondents')
@@ -32,8 +44,9 @@ export async function enterWithCode(_prev: { error: string } | null, formData: F
     .eq('identifier', identifier)
     .eq('active', true)
     .maybeSingle();
-  if (!person) return { error: 'Nomor induk tidak terdaftar. Hubungi admin sekolah.' };
-  if (!(form.targets as Role[]).includes(person.role as Role)) return { error: 'Angket ini bukan untuk peran Anda.' };
+  if (!person) return { error: `${idShort(role)} tidak terdaftar. Hubungi admin sekolah.` };
+  if (person.role !== role)
+    return { error: `Nomor ini terdaftar sebagai ${ROLE_LABEL[person.role as Role]}, bukan ${ROLE_LABEL[role]}.` };
 
   const { data: tok } = await db
     .from('access_tokens')
@@ -41,9 +54,9 @@ export async function enterWithCode(_prev: { error: string } | null, formData: F
     .eq('form_id', form.id)
     .eq('respondent_id', person.id)
     .maybeSingle();
+  if (tok?.used_at) return { error: 'Nomor induk ini sudah dipakai mengisi. Terima kasih.' };
 
   let token = tok?.token as string | undefined;
-  if (tok?.used_at) return { error: 'Anda sudah mengisi angket ini. Terima kasih.' };
   if (!token) {
     token = generateToken();
     const { error } = await db.from('access_tokens').insert({ form_id: form.id, respondent_id: person.id, token });
@@ -108,7 +121,7 @@ function clean(q: Question, v: AnswerValue | undefined): { value?: AnswerValue; 
 
 export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
   const db = createAdminClient();
-  const { data: form } = await db.from('forms').select('id, access_mode, targets').eq('id', input.formId).maybeSingle();
+  const { data: form } = await db.from('forms').select('id, access_mode, open_id, targets').eq('id', input.formId).maybeSingle();
   if (!form) return { ok: false, error: ERRORS.ANGKET_TIDAK_ADA };
 
   let role: Role;
@@ -128,6 +141,7 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
   } else {
     if (form.access_mode !== 'terbuka') return { ok: false, error: ERRORS.TOKEN_DIPERLUKAN };
     if (!input.role || !(form.targets as Role[]).includes(input.role)) return { ok: false, error: 'Pilih peran Anda terlebih dahulu.' };
+    if (needsId(form, input.role)) return { ok: false, error: `Isi ${idShort(input.role)} terlebih dahulu. Muat ulang halaman.` };
     if (!input.deviceId) return { ok: false, error: 'Perangkat tidak dikenali. Muat ulang halaman.' };
     if (!(await verifyTurnstile(input.turnstileToken))) return { ok: false, error: 'Verifikasi keamanan gagal. Coba lagi.' };
     role = input.role;

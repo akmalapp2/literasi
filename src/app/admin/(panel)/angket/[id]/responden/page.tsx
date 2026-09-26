@@ -45,7 +45,7 @@ export default async function TokensPage({ params }: { params: Promise<{ id: str
       </div>
       {form.access_mode !== 'token' && (
         <div className="alert alert-info small">
-          Angket ini memakai mode <strong>{form.access_mode === 'kode' ? 'Kode angket + nomor induk' : 'Terbuka, anonim'}</strong>.
+          Angket ini memakai mode <strong>{form.access_mode === 'kode' ? 'Kode + nomor induk' : 'Terbuka, anonim'}</strong>.
           Link pribadi tetap bisa dipakai, tetapi responden juga bisa masuk lewat <code>{baseUrl}/f/{form.slug}</code>.
         </div>
       )}

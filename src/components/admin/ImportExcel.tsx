@@ -7,7 +7,7 @@ import Toast, { type ToastMsg } from '@/components/Toast';
 import { ROLE_LABEL, usesClass } from '@/lib/text';
 import { ROLES, type Role } from '@/lib/types';
 
-const HEAD = ['Nama', 'Nomor Induk', 'Peran', 'Kelas', 'Mapel/Jabatan', 'No WA'];
+const HEAD = ['Nama', 'Nomor Induk (NIT/NIP)', 'Peran', 'Kelas', 'Mapel/Jabatan', 'No WA'];
 
 /** Kenali peran dari teks bebas di Excel. Urutan penting ("Kepala Tata Usaha" = tendik). */
 function toRole(v: unknown): Role {
@@ -42,7 +42,7 @@ export default function ImportExcel() {
           const role = toRole(pick(r, 'peran', 'role', 'status'));
           return {
             name: pick(r, 'nama'),
-            identifier: pick(r, 'nomorinduk', 'nisn', 'nip', 'nuptk', 'nik', 'identitas'),
+            identifier: pick(r, 'nomorinduk', 'nit', 'nisn', 'nip', 'nuptk', 'nik', 'identitas'),
             role,
             class_name: usesClass(role) ? pick(r, 'kelas', 'rombel', 'lulus', 'angkatan') || null : null,
             subject: !usesClass(role) ? pick(r, 'mapel', 'jabatan', 'mata', 'pekerjaan', 'instansi') || null : null,
@@ -62,12 +62,12 @@ export default function ImportExcel() {
   const template = () => {
     const ws = XLSX.utils.aoa_to_sheet([
       HEAD,
-      ['Andi Pratama', '0081234567', 'Siswa', 'XI NKPI 1', '', '081234567890'],
+      ['Andi Pratama', '2024001', 'Siswa', 'XI NKPI 1', '', '081234567890'],
       ['Nur Aisyah, S.Pd.', '198703152010012005', 'Guru', '', 'Bahasa Indonesia', '081298765432'],
       ['Drs. H. Ahmad', '196805121994031008', 'Kepala Sekolah', '', 'Kepala Sekolah', ''],
       ['Rahmat', '7301010101800001', 'Tenaga Kependidikan', '', 'Tata Usaha', ''],
       ['Hj. Sitti', '7301014505750002', 'Orang Tua/Wali', 'XI NKPI 1', '', '081311122233'],
-      ['Rina Amalia', '0071234567', 'Alumni', '2024', '', ''],
+      ['Rina Amalia', '2021045', 'Alumni', '2024', '', ''],
     ]);
     ws['!cols'] = [{ wch: 26 }, { wch: 22 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 16 }];
     const wb = XLSX.utils.book_new();

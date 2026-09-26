@@ -10,6 +10,7 @@ import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ROLE_LABEL, formatDate } from '@/lib/text';
 import { ROLES, type FormRow, type Role } from '@/lib/types';
+import Credit from '@/components/Credit';
 
 export const metadata: Metadata = { title: 'Hasil angket' };
 
@@ -122,6 +123,7 @@ export default async function HasilPage({
           Status: {form.status === 'ditutup' ? 'ditutup' : 'sedang berjalan'}
           {form.closes_at ? `, batas pengisian ${formatDate(form.closes_at)} WITA` : ''}.
         </p>
+        <Credit />
       </main>
     </div>
   );

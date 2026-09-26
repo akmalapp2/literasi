@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import CodeEntry from '@/components/fill/CodeEntry';
-import FillApp from '@/components/fill/FillApp';
+import EntryFlow from '@/components/fill/EntryFlow';
 import StatusCard from '@/components/StatusCard';
 import { formWindow, resultsVisible } from '@/lib/form-window';
 import { getSettings, toBrand } from '@/lib/settings';
@@ -28,9 +27,9 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
       <StatusCard brand={brand} icon="bi-qr-code" title="Gunakan link pribadi" text="Angket ini diisi lewat link atau kartu QR pribadi yang dibagikan sekolah. Hubungi wali kelas atau admin jika belum menerimanya." />
     );
   }
-  if (form.access_mode === 'kode') return <CodeEntry brand={brand} slug={form.slug} title={form.title} />;
 
-  const { data: qrows } = await db
+  // Mode kode: pertanyaan baru dimuat setelah nomor induk dicocokkan (di /isi/[token]).
+  const { data: qrows } = form.access_mode === 'kode' ? { data: [] } : await db
     .from('questions')
     .select('id, type, title, required, roles, options, settings')
     .eq('form_id', form.id)
@@ -38,13 +37,15 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
   const design = form.fill_design === 'ikut' ? settings.default_fill_design : form.fill_design;
 
   return (
-    <FillApp
+    <EntryFlow
       brand={brand}
-      form={{ id: form.id, title: form.title, description: form.description, slug: form.slug, showResultsLink: resultsVisible(form) }}
+      form={{
+        id: form.id, title: form.title, description: form.description, slug: form.slug,
+        showResultsLink: resultsVisible(form), access_mode: form.access_mode, open_id: form.open_id ?? 'semua',
+      }}
       questions={(qrows ?? []) as Question[]}
       design={design}
       targets={form.targets}
-      mode="terbuka"
       turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || null}
     />
   );

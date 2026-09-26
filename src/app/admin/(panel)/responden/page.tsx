@@ -66,7 +66,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
                 <input id="rn" name="name" className="form-control" required defaultValue={editing?.name ?? ''} />
               </div>
               <div className="col-md-6">
-                <label className="form-label small fw-semibold" htmlFor="ri">Nomor induk (NISN / NIP / NUPTK / NIK)</label>
+                <label className="form-label small fw-semibold" htmlFor="ri">Nomor induk (NIT untuk siswa, NIP/NUPTK untuk guru &amp; kepsek)</label>
                 <input id="ri" name="identifier" className="form-control" required defaultValue={editing?.identifier ?? ''} />
               </div>
               <div className="col-md-4">
@@ -104,7 +104,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
       )}
 
       <form className="d-flex flex-wrap gap-2 mb-3" method="get">
-        <input name="q" className="form-control" style={{ maxWidth: 260 }} placeholder="Cari nama / nomor induk" defaultValue={sp.q ?? ''} aria-label="Cari" />
+        <input name="q" className="form-control" style={{ maxWidth: 260 }} placeholder="Cari nama / NIT / NIP" defaultValue={sp.q ?? ''} aria-label="Cari" />
         <select name="peran" className="form-select" style={{ maxWidth: 180 }} defaultValue={sp.peran ?? ''} aria-label="Peran">
           <option value="">Semua peran</option>
           {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
@@ -123,7 +123,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
           <div className="card border-0 shadow-sm d-none d-md-block">
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead><tr><th className="ps-3">Nama</th><th>Nomor induk</th><th>Peran</th><th>Kelas / keterangan</th><th>WA</th><th className="text-end pe-3">Aksi</th></tr></thead>
+                <thead><tr><th className="ps-3">Nama</th><th>NIT / NIP</th><th>Peran</th><th>Kelas / keterangan</th><th>WA</th><th className="text-end pe-3">Aksi</th></tr></thead>
                 <tbody>
                   {people.map((p) => (
                     <tr key={p.id} className={p.active ? '' : 'text-secondary'}>

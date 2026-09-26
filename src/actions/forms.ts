@@ -18,6 +18,7 @@ const metaSchema = z.object({
   status: z.enum(['draf', 'terbit', 'ditutup']),
   access_mode: z.enum(['token', 'kode', 'terbuka']),
   access_code: z.string().trim().max(30).nullable(),
+  open_id: z.enum(['none', 'siswa', 'semua']),
   fill_design: z.enum(['ikut', 'A', 'B']),
   opens_at: z.string().nullable(),
   closes_at: z.string().nullable(),
@@ -65,7 +66,7 @@ export async function createForm() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from('forms')
-    .insert({ slug: generateSlug(), title: 'Angket baru', description: '' })
+    .insert({ slug: generateSlug(), title: 'Judul baru', description: '' })
     .select('id')
     .single();
   if (error || !data) throw new Error(error?.message ?? 'Gagal membuat angket.');

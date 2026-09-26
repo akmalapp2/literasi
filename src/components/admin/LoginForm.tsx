@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Brand } from '@/lib/types';
+import Credit from '@/components/Credit';
 
 export default function LoginForm({ brand, next, notAdmin }: { brand: Brand; next: string; notAdmin: boolean }) {
   const router = useRouter();
@@ -50,6 +51,7 @@ export default function LoginForm({ brand, next, notAdmin }: { brand: Brand; nex
       <p className="small text-secondary text-center mt-3">
         Halaman ini khusus admin. Responden mengisi angket lewat link, kode, atau QR yang dibagikan sekolah.
       </p>
+      <Credit />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { signOut } from '@/actions/auth';
 import { BrandMark } from '@/components/Brand';
 import type { Brand } from '@/lib/types';
+import Credit from '@/components/Credit';
 
 const NAV = [
   { href: '/admin', label: 'Angket', icon: 'bi-collection' },
@@ -61,6 +62,7 @@ export default function AdminShell({ brand, email, children }: { brand: Brand; e
             <span className="text-truncate me-2">{email}</span>
             {logout}
           </div>
+          <Credit light className="px-2" />
         </div>
       )}
       <div className="d-flex">
@@ -70,6 +72,7 @@ export default function AdminShell({ brand, email, children }: { brand: Brand; e
           <div className="mt-auto small text-white-50 px-2">
             <div className="text-truncate mb-1">{email}</div>
             {logout}
+            <Credit light />
           </div>
         </aside>
         <main className="flex-grow-1 min-w-0">{children}</main>

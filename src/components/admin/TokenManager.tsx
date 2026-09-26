@@ -48,7 +48,7 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
 
   const url = (t: TokenRow) => `${baseUrl}/isi/${t.token}`;
   const waText = (t: TokenRow) =>
-    `Yth. ${greetingName(t.respondents.name, t.respondents.role) === 'Bapak/Ibu' ? 'Bapak/Ibu ' + t.respondents.name : t.respondents.name}, mohon mengisi angket "${formTitle}" melalui link pribadi berikut: ${url(t)} (link hanya untuk Anda dan hanya bisa dipakai sekali). Terima kasih.`;
+    `Yth. ${greetingName(t.respondents.name, t.respondents.role) === 'Bapak/Ibu' ? 'Bapak/Ibu ' + t.respondents.name : t.respondents.name}, mohon mengisi "${formTitle}" melalui link pribadi berikut: ${url(t)} (link hanya untuk Anda dan hanya bisa dipakai sekali). Terima kasih.`;
 
   const qp = new URLSearchParams();
   if (role) qp.set('peran', role);
@@ -98,7 +98,7 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
       </div></div>
 
       <div className="d-flex flex-wrap gap-2 mb-3">
-        <input className="form-control" style={{ maxWidth: 260 }} placeholder="Cari nama / nomor induk" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Cari" />
+        <input className="form-control" style={{ maxWidth: 260 }} placeholder="Cari nama / NIT / NIP" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Cari" />
         <select className="form-select" style={{ maxWidth: 180 }} value={role} onChange={(e) => setRole(e.target.value)} aria-label="Peran">
           <option value="">Semua peran</option>
           {targets.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}

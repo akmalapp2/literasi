@@ -12,7 +12,7 @@ Satu jenis akun saja: **admin**. Responden mengisi tanpa login.
 - Rentang angka, misalnya "Mulai halaman 2 sampai halaman 10", lengkap dengan rekap rata-rata dan jumlah.
 - Editor dengan 2 tampilan: **1. Kartu** dan **2. Panel + pratinjau HP**. Bawaan dipilih di menu Pengaturan.
 - Halaman isi dengan 2 desain: **A. Fokus satu per satu** dan **B. Obrolan**. Bawaan dipilih di Pengaturan, bisa diganti per angket.
-- 3 mode masuk responden per angket: link/QR pribadi (sekali pakai), kode angket + NISN/NIP, atau terbuka anonim (+ Cloudflare Turnstile).
+- 3 mode masuk responden per angket: link/QR pribadi (sekali pakai), kode + nomor induk, atau terbuka (+ Cloudflare Turnstile). Pada mode kode & terbuka, responden memilih peran dulu; siswa masuk dengan NIT (Nomor Induk Taruna), guru & kepala sekolah dengan NIP/NUPTK.
 - Data responden: tambah manual atau impor Excel (ada template).
 - Link pribadi: salin, kirim lewat WhatsApp, cetak kartu QR per kelas, buat ulang link, izinkan isi ulang.
 - Hasil publik tanpa nama, grafik per pertanyaan, saring per peran & kelas. Unduh semua jawaban (CSV untuk Excel).
@@ -33,7 +33,7 @@ src/lib/                            Supabase client, auth, teks, tipe
 
 ### 1. Supabase
 1. Buat proyek di https://supabase.com (region terdekat: Singapore).
-2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql` dan `0003_peran_tambahan.sql`.
+2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql`, `0003_peran_tambahan.sql`, dan `0004_identitas_mode_terbuka.sql`.
 3. **Authentication → Users → Add user**: buat akun admin (email + kata sandi, centang *Auto Confirm*).
 4. Jadikan akun itu admin (SQL Editor):
    ```sql
@@ -85,3 +85,6 @@ Buat widget di dasbor Cloudflare → Turnstile, lalu isi `NEXT_PUBLIC_TURNSTILE_
 
 ## Tips teks pertanyaan
 Tulis `{kamu}` agar otomatis menjadi "kamu" (siswa), "Anda" (alumni, masyarakat umum), atau "Bapak/Ibu" (peran lainnya), dan `{tugas}` menjadi "jam pelajaran" / "tugas mengajar" / "tugas dinas".
+
+## Kredit
+Hak cipta © Akmal Iskandar, S.Pi

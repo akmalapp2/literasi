@@ -11,6 +11,7 @@ import DesignB from './DesignB';
 import Turnstile from './Turnstile';
 import type { Who } from './types';
 import { uid } from '@/components/editor/shared';
+import Credit from '@/components/Credit';
 
 type Props = {
   brand: Brand;
@@ -22,13 +23,14 @@ type Props = {
   respondent?: { name: string; role: Role; detail: string } | null;
   token?: string | null;
   turnstileSiteKey?: string | null;
-  previewRole?: Role;
+  /** Peran yang sudah dipilih sebelumnya (halaman masuk / pratinjau). */
+  presetRole?: Role;
 };
 
 export default function FillApp(props: Props) {
   const { brand, form, questions, design, targets, mode, respondent, token, turnstileSiteKey } = props;
   const [role, setRole] = useState<Role | null>(
-    respondent?.role ?? props.previewRole ?? (targets.length === 1 ? targets[0] : null),
+    respondent?.role ?? props.presetRole ?? (targets.length === 1 ? targets[0] : null),
   );
   const [answers, setAnswers] = useState<Answers>({});
   const [done, setDone] = useState(false);
@@ -104,6 +106,7 @@ export default function FillApp(props: Props) {
           {form.showResultsLink && mode !== 'preview' && (
             <Link className="btn btn-outline-primary" href={`/hasil/${form.slug}`}>Lihat hasil sementara</Link>
           )}
+          <Credit />
         </div>
       </div>
     );
@@ -128,6 +131,7 @@ export default function FillApp(props: Props) {
               <i className="bi bi-chevron-right tick" style={{ visibility: 'visible' }} />
             </button>
           ))}
+          <Credit />
         </div>
       </div>
     );

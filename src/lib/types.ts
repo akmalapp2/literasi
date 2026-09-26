@@ -28,6 +28,8 @@ export type Question = {
 
 export type FormStatus = 'draf' | 'terbit' | 'ditutup';
 export type AccessMode = 'token' | 'kode' | 'terbuka';
+/** Mode Terbuka: siapa yang wajib mengisi nomor induk. */
+export type OpenId = 'none' | 'siswa' | 'semua';
 export type FillDesign = 'A' | 'B';
 export type EditorView = 'kartu' | 'panel';
 
@@ -39,6 +41,7 @@ export type FormMeta = {
   status: FormStatus;
   access_mode: AccessMode;
   access_code: string | null;
+  open_id: OpenId;
   fill_design: 'ikut' | FillDesign;
   opens_at: string | null;
   closes_at: string | null;

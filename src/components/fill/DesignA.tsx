@@ -6,6 +6,7 @@ import { endLabel, filled, fmtAnswer, isOther, makeOther, otherLabel, otherText,
 import { KEYS, greetingName, personalize } from '@/lib/text';
 import type { AnswerValue, Question } from '@/lib/types';
 import type { DesignProps } from './types';
+import Credit from '@/components/Credit';
 
 const OTHER_SELECT = '__lainnya__';
 
@@ -266,7 +267,10 @@ export default function DesignA(p: DesignProps) {
     <>
       <div className="fokus">
         {top}
-        <div className="fokus-body">{body}</div>
+        <div className="fokus-body">
+          {body}
+          <Credit />
+        </div>
       </div>
       <div className="fokus-nav"><div className="inner">{nav}</div></div>
     </>

@@ -19,6 +19,22 @@ export const ROLE_SHORT: Record<Role, string> = {
   umum: 'Umum',
 };
 
+/** Label nomor induk sesuai peran: NIT untuk siswa & alumni, NIP untuk guru/kepsek. */
+export const ID_LABEL: Record<Role, string> = {
+  kepsek: 'NIP',
+  guru: 'NIP / NUPTK',
+  tendik: 'NIP / NUPTK',
+  siswa: 'NIT (Nomor Induk Taruna)',
+  ortu: 'NIK',
+  alumni: 'NIT (Nomor Induk Taruna)',
+  umum: 'Nomor identitas',
+};
+/** Versi pendek, mis. "NIT", "NIP / NUPTK". */
+export const idShort = (r: Role) => ID_LABEL[r].split(' (')[0];
+
+/** Pembuat aplikasi (ditampilkan di footer). */
+export const CREATOR = 'Akmal Iskandar, S.Pi';
+
 /** Peran yang memakai kolom "kelas": siswa (kelas), orang tua (kelas anak), alumni (tahun lulus). */
 export const usesClass = (r: Role) => r === 'siswa' || r === 'ortu' || r === 'alumni';
 

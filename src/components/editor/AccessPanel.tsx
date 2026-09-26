@@ -27,9 +27,9 @@ function randomCode(): string {
 }
 
 const MODES: { v: AccessMode; title: string; text: string; tag?: string }[] = [
-  { v: 'token', title: 'Link / QR pribadi', tag: 'Disarankan', text: 'Tiap responden punya link unik. Tanpa login, sekali pakai, nama & peran terisi otomatis.' },
-  { v: 'kode', title: 'Kode angket + nomor induk', text: 'Satu link umum. Responden mengetik kode angket dan nomor induk yang terdaftar (NISN, NIP, NUPTK, NIK, dll.).' },
-  { v: 'terbuka', title: 'Terbuka, anonim', text: 'Siapa pun dengan link bisa mengisi. Dilindungi Turnstile anti-bot; pengisian ganda hanya dicegah per perangkat.' },
+  { v: 'token', title: 'Link / QR pribadi', tag: 'Disarankan', text: 'Tiap responden punya link unik. Tanpa pilih peran, sekali pakai, nama & peran terisi otomatis.' },
+  { v: 'kode', title: 'Kode + nomor induk', text: 'Satu link umum. Responden memilih peran, lalu mengetik kode dan nomor induk: NIT untuk siswa, NIP/NUPTK untuk guru & kepala sekolah.' },
+  { v: 'terbuka', title: 'Terbuka', text: 'Satu link umum tanpa kode. Responden memilih peran lalu mengisi. Dilindungi Turnstile anti-bot.' },
 ];
 
 export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFillDesign }: Props) {
@@ -56,6 +56,26 @@ export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFil
           </div>
         ))}
 
+        {meta.access_mode === 'terbuka' && (
+          <div className="border-start border-3 border-warning bg-warning-subtle rounded-end p-3 mt-2">
+            <div className="form-check form-switch mb-1">
+              <input className="form-check-input" type="checkbox" id="wajibNit" checked={meta.open_id !== 'none'}
+                onChange={(e) => setMeta({ open_id: e.target.checked ? 'siswa' : 'none' })} />
+              <label className="form-check-label fw-semibold" htmlFor="wajibNit">Wajib isi NIT untuk siswa</label>
+            </div>
+            <div className="small text-secondary mb-2">Siswa mengetik NIT (Nomor Induk Taruna) yang terdaftar. Satu NIT hanya bisa mengisi sekali.</div>
+            <div className="form-check form-switch mb-1">
+              <input className="form-check-input" type="checkbox" id="wajibNip" checked={meta.open_id === 'semua'} disabled={meta.open_id === 'none'}
+                onChange={(e) => setMeta({ open_id: e.target.checked ? 'semua' : 'siswa' })} />
+              <label className="form-check-label fw-semibold" htmlFor="wajibNip">Wajib isi NIP/NUPTK untuk guru, kepala sekolah &amp; peran lain</label>
+            </div>
+            <div className="small text-secondary">
+              {meta.open_id === 'semua'
+                ? 'Semua responden wajib nomor induk, kecuali Masyarakat Umum yang tetap anonim.'
+                : 'Jika mati, peran selain siswa mengisi tanpa identitas (dicegah isi ganda per perangkat).'}
+            </div>
+          </div>
+        )}
         {meta.access_mode === 'token' && (
           <Link href={`/admin/angket/${formId}/responden`} className="btn btn-outline-primary mt-2">
             <i className="bi bi-link-45deg me-1" />Kelola link &amp; kartu QR responden

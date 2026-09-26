@@ -5,6 +5,7 @@ import { Logo } from '@/components/Brand';
 import { endLabel, filled, fmtAnswer, makeOther, otherLabel, problem, startLabel } from '@/lib/answers';
 import { addressee, greetingName, personalize } from '@/lib/text';
 import type { DesignProps } from './types';
+import Credit from '@/components/Credit';
 
 type InputKind = 'none' | 'text' | 'long' | 'date' | 'range' | 'other';
 
@@ -78,7 +79,7 @@ export default function DesignB(p: DesignProps) {
   );
 
   const items: React.ReactNode[] = [
-    bot('hello', <>Halo, {greet}! Ini angket <strong>{p.title}</strong>. Ada {n} pertanyaan singkat.{p.description ? <><br /><span className="text-secondary">{p.description}</span></> : null}</>),
+    bot('hello', <>Halo, {greet}! Selamat datang di <strong>{p.title}</strong>. Ada {n} pertanyaan singkat.{p.description ? <><br /><span className="text-secondary">{p.description}</span></> : null}</>),
   ];
   for (let i = 0; i < Math.min(idx, n); i++) {
     items.push(bot(`q${i}`, qLabel(i)));
@@ -260,6 +261,7 @@ export default function DesignB(p: DesignProps) {
             <i className="bi bi-send-fill" />
           </button>
         </div>
+        <Credit />
       </div>
     </div>
   );
