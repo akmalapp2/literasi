@@ -1,0 +1,139 @@
+'use client';
+
+import Link from 'next/link';
+import CopyButton from '@/components/CopyButton';
+import type { AccessMode, FillDesign, FormMeta } from '@/lib/types';
+import { RoleChips } from './shared';
+
+type Props = {
+  formId: string;
+  meta: FormMeta;
+  setMeta: (p: Partial<FormMeta>) => void;
+  baseUrl: string;
+  defaultFillDesign: FillDesign;
+};
+
+function toLocal(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+function fromLocal(v: string): string | null {
+  return v ? new Date(v).toISOString() : null;
+}
+function randomCode(): string {
+  const a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => a[Math.floor(Math.random() * a.length)]).join('');
+}
+
+const MODES: { v: AccessMode; title: string; text: string; tag?: string }[] = [
+  { v: 'token', title: 'Link / QR pribadi', tag: 'Disarankan', text: 'Tiap kepala sekolah, guru, dan siswa punya link unik. Tanpa login, sekali pakai, nama & peran terisi otomatis.' },
+  { v: 'kode', title: 'Kode angket + NISN/NIP', text: 'Satu link umum. Responden mengetik kode angket dan NISN (siswa) atau NIP/NUPTK (guru, kepala sekolah).' },
+  { v: 'terbuka', title: 'Terbuka, anonim', text: 'Siapa pun dengan link bisa mengisi. Dilindungi Turnstile anti-bot; pengisian ganda hanya dicegah per perangkat.' },
+];
+
+export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFillDesign }: Props) {
+  const entryUrl = `${baseUrl}/f/${meta.slug}`;
+  const resultUrl = `${baseUrl}/hasil/${meta.slug}`;
+
+  return (
+    <div className="editor-wrap mx-auto d-flex flex-column gap-3">
+      <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">
+        <h2 className="h6 fw-bold mb-3">Sasaran &amp; cara masuk</h2>
+        <div className="small fw-semibold mb-2">Angket ini untuk</div>
+        <div className="d-flex flex-wrap gap-2 mb-4">
+          <RoleChips value={meta.targets} onChange={(v) => setMeta({ targets: v })} />
+        </div>
+        {MODES.map((m) => (
+          <div key={m.v} className="form-check border rounded-3 p-3 ps-5 mb-2">
+            <input className="form-check-input" type="radio" name="mode" id={`mode-${m.v}`} checked={meta.access_mode === m.v} onChange={() => setMeta({ access_mode: m.v })} />
+            <label className="form-check-label w-100" htmlFor={`mode-${m.v}`}>
+              <span className="fw-semibold">{m.title}</span>
+              {m.tag && <span className="badge text-bg-warning ms-2">{m.tag}</span>}
+              <br />
+              <span className="small text-secondary">{m.text}</span>
+            </label>
+          </div>
+        ))}
+
+        {meta.access_mode === 'token' && (
+          <Link href={`/admin/angket/${formId}/responden`} className="btn btn-outline-primary mt-2">
+            <i className="bi bi-link-45deg me-1" />Kelola link &amp; kartu QR responden
+          </Link>
+        )}
+        {meta.access_mode === 'kode' && (
+          <div className="mt-2">
+            <label className="form-label small fw-semibold" htmlFor="kode">Kode akses</label>
+            <div className="input-group mb-2" style={{ maxWidth: 320 }}>
+              <input id="kode" className="form-control text-uppercase" value={meta.access_code ?? ''} maxLength={30}
+                onChange={(e) => setMeta({ access_code: e.target.value.toUpperCase() || null })} />
+              <button type="button" className="btn btn-outline-secondary" onClick={() => setMeta({ access_code: randomCode() })}>Buat acak</button>
+            </div>
+          </div>
+        )}
+        {meta.access_mode !== 'token' && (
+          <div className="mt-2">
+            <div className="small fw-semibold mb-1">Link untuk dibagikan</div>
+            <div className="input-group">
+              <input className="form-control" readOnly value={entryUrl} aria-label="Link angket" />
+              <CopyButton text={entryUrl} className="btn btn-outline-secondary" />
+            </div>
+          </div>
+        )}
+      </div></div>
+
+      <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">
+        <h2 className="h6 fw-bold mb-3">Desain halaman isi</h2>
+        <select className="form-select mb-2" value={meta.fill_design} aria-label="Desain halaman isi"
+          onChange={(e) => setMeta({ fill_design: e.target.value as FormMeta['fill_design'] })}>
+          <option value="ikut">Ikuti pengaturan umum (sekarang: Desain {defaultFillDesign})</option>
+          <option value="A">Desain A. Fokus satu per satu</option>
+          <option value="B">Desain B. Obrolan</option>
+        </select>
+        <div className="small text-secondary">Desain umum diatur di menu <Link href="/admin/pengaturan">Pengaturan</Link>.</div>
+      </div></div>
+
+      <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">
+        <h2 className="h6 fw-bold mb-3">Jadwal</h2>
+        <div className="row g-3">
+          <div className="col-sm-6">
+            <label className="form-label small fw-semibold" htmlFor="buka">Dibuka</label>
+            <input id="buka" type="datetime-local" className="form-control" value={toLocal(meta.opens_at)} onChange={(e) => setMeta({ opens_at: fromLocal(e.target.value) })} />
+          </div>
+          <div className="col-sm-6">
+            <label className="form-label small fw-semibold" htmlFor="tutup">Ditutup</label>
+            <input id="tutup" type="datetime-local" className="form-control" value={toLocal(meta.closes_at)} onChange={(e) => setMeta({ closes_at: fromLocal(e.target.value) })} />
+          </div>
+        </div>
+        <div className="form-text">Kosongkan jika tidak memakai jadwal. Angket hanya bisa diisi saat statusnya Terbit.</div>
+      </div></div>
+
+      <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">
+        <h2 className="h6 fw-bold mb-3">Hasil publik</h2>
+        <div className="form-check form-switch mb-2">
+          <input className="form-check-input" type="checkbox" id="pub" checked={meta.public_results} onChange={(e) => setMeta({ public_results: e.target.checked })} />
+          <label className="form-check-label" htmlFor="pub">Tampilkan hasil di halaman publik</label>
+        </div>
+        <div className="form-check form-switch mb-2">
+          <input className="form-check-input" type="checkbox" id="hide" checked={meta.hide_text_public} onChange={(e) => setMeta({ hide_text_public: e.target.checked })} />
+          <label className="form-check-label" htmlFor="hide">Sembunyikan jawaban isian (singkat &amp; panjang) dari publik</label>
+        </div>
+        <div className="form-check form-switch mb-3">
+          <input className="form-check-input" type="checkbox" id="after" checked={meta.results_after_close} onChange={(e) => setMeta({ results_after_close: e.target.checked })} />
+          <label className="form-check-label" htmlFor="after">Tampilkan hasil publik hanya setelah angket ditutup</label>
+        </div>
+        <label className="form-label small fw-semibold" htmlFor="slug">Alamat angket</label>
+        <div className="input-group mb-2">
+          <span className="input-group-text small">/hasil/</span>
+          <input id="slug" className="form-control" value={meta.slug}
+            onChange={(e) => setMeta({ slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })} />
+        </div>
+        <div className="input-group">
+          <input className="form-control" readOnly value={resultUrl} aria-label="Link hasil publik" />
+          <CopyButton text={resultUrl} className="btn btn-outline-secondary" />
+          <a className="btn btn-outline-secondary" href={resultUrl} target="_blank" rel="noreferrer" title="Buka"><i className="bi bi-box-arrow-up-right" /></a>
+        </div>
+      </div></div>
+    </div>
+  );
+}
