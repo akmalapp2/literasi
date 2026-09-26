@@ -150,3 +150,17 @@ export async function saveForm(id: string, meta: FormMeta, questions: Question[]
   revalidatePath(`/admin/angket/${id}`);
   return { ok: true, message: 'Perubahan tersimpan.' };
 }
+
+/** Hapus SEMUA jawaban angket ini (pertanyaan & link tetap). Link pribadi bisa dipakai lagi. */
+export async function clearResponses(id: string): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  const { count } = await supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', id);
+  const { error } = await supabase.from('responses').delete().eq('form_id', id);
+  if (error) return { ok: false, error: 'Gagal menghapus jawaban: ' + error.message };
+  const { error: tErr } = await supabase.from('access_tokens').update({ used_at: null }).eq('form_id', id).not('used_at', 'is', null);
+  if (tErr) return { ok: false, error: 'Jawaban terhapus, tetapi status link gagal direset: ' + tErr.message };
+  revalidatePath('/admin');
+  revalidatePath(`/admin/angket/${id}`);
+  revalidatePath(`/admin/angket/${id}/responden`);
+  return { ok: true, message: `${count ?? 0} jawaban dihapus. Angket siap diisi dari awal.` };
+}

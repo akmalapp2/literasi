@@ -210,7 +210,7 @@ export default function FormEditor({ form, initialQuestions, brand, defaultView,
 
       <div className="px-3 px-lg-4 py-4">
         {tab === 'akses' ? (
-          <AccessPanel formId={form.id} meta={meta} setMeta={setMeta} baseUrl={baseUrl} defaultFillDesign={defaultFillDesign} />
+          <AccessPanel formId={form.id} meta={meta} setMeta={setMeta} baseUrl={baseUrl} defaultFillDesign={defaultFillDesign} responseCount={responseCount} />
         ) : view === 'kartu' ? (
           <CardsView meta={meta} setMeta={setMeta} qs={qs} ops={ops} active={active} setActive={setActive} />
         ) : (

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import CopyButton from '@/components/CopyButton';
+import ClearResponses from './ClearResponses';
 import type { AccessMode, FillDesign, FormMeta } from '@/lib/types';
 import { RoleChips } from './shared';
 
@@ -11,6 +12,7 @@ type Props = {
   setMeta: (p: Partial<FormMeta>) => void;
   baseUrl: string;
   defaultFillDesign: FillDesign;
+  responseCount: number;
 };
 
 function toLocal(iso: string | null): string {
@@ -32,7 +34,7 @@ const MODES: { v: AccessMode; title: string; text: string; tag?: string }[] = [
   { v: 'terbuka', title: 'Terbuka', text: 'Satu link umum tanpa kode. Responden memilih peran lalu mengisi. Dilindungi Turnstile anti-bot.' },
 ];
 
-export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFillDesign }: Props) {
+export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFillDesign, responseCount }: Props) {
   const entryUrl = `${baseUrl}/f/${meta.slug}`;
   const resultUrl = `${baseUrl}/hasil/${meta.slug}`;
 
@@ -154,6 +156,7 @@ export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFil
           <a className="btn btn-outline-secondary" href={resultUrl} target="_blank" rel="noreferrer" title="Buka"><i className="bi bi-box-arrow-up-right" /></a>
         </div>
       </div></div>
+      <ClearResponses formId={formId} count={responseCount} />
     </div>
   );
 }
