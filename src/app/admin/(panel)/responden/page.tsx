@@ -120,7 +120,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
         <div className="list-card text-center py-4">Belum ada data. Tambah satu per satu atau impor dari Excel.</div>
       ) : (
         <>
-          <div className="card border-0 shadow-sm d-none d-md-block">
+          <div className="card-s d-none d-md-block overflow-hidden">
             <div className="table-responsive">
               <table className="table align-middle mb-0">
                 <thead><tr><th className="ps-3">Nama</th><th>NIT / NIP</th><th>Peran</th><th>Kelas / keterangan</th><th>WA</th><th className="text-end pe-3">Aksi</th></tr></thead>
@@ -134,10 +134,10 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
                       <td>{p.phone ? <i className="bi bi-whatsapp text-success" title={p.phone} /> : '—'}</td>
                       <td className="text-end pe-3">
                         <div className="d-inline-flex gap-1">
-                          <Link className="btn btn-sm btn-outline-secondary" href={`/admin/responden?edit=${p.id}`} title="Ubah" aria-label="Ubah"><i className="bi bi-pencil" /></Link>
+                          <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/responden?edit=${p.id}`} title="Ubah" aria-label="Ubah"><i className="bi bi-pencil" /></Link>
                           <form action={deleteRespondent}>
                             <input type="hidden" name="id" value={p.id} />
-                            <ConfirmButton className="btn btn-sm btn-outline-danger" title="Hapus" message={`Hapus ${p.name}? Link angket miliknya ikut terhapus. Jawabannya tetap tersimpan tanpa nama.`}>
+                            <ConfirmButton className="btn btn-sm btn-outline-danger icon-btn" title="Hapus" message={`Hapus ${p.name}? Link angket miliknya ikut terhapus. Jawabannya tetap tersimpan tanpa nama.`}>
                               <i className="bi bi-trash" />
                             </ConfirmButton>
                           </form>
@@ -159,10 +159,10 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
                     {p.class_name ?? p.subject ?? ''} ({p.identifier})
                   </div>
                 </div>
-                <Link className="btn btn-sm btn-outline-secondary" href={`/admin/responden?edit=${p.id}`} aria-label="Ubah"><i className="bi bi-pencil" /></Link>
+                <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/responden?edit=${p.id}`} aria-label="Ubah"><i className="bi bi-pencil" /></Link>
                 <form action={deleteRespondent}>
                   <input type="hidden" name="id" value={p.id} />
-                  <ConfirmButton className="btn btn-sm btn-outline-danger" title="Hapus" message={`Hapus ${p.name}?`}>
+                  <ConfirmButton className="btn btn-sm btn-outline-danger icon-btn" title="Hapus" message={`Hapus ${p.name}?`}>
                     <i className="bi bi-trash" />
                   </ConfirmButton>
                 </form>

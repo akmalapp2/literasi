@@ -14,11 +14,42 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="p-3 p-lg-4" style={{ maxWidth: 960 }}>
       <h1 className="h3 page-title mb-1">Pengaturan</h1>
-      <p className="text-secondary">Berlaku untuk seluruh aplikasi.</p>
+      <p className="text-secondary">Nama aplikasi, logo, dan tampilan. Berlaku untuk seluruh aplikasi.</p>
       {sp.ok && <div className="alert alert-success py-2">Pengaturan tersimpan.</div>}
       {sp.e && <div className="alert alert-danger py-2">{sp.e}</div>}
 
       <form action={saveSettings}>
+        <div className="card border-0 shadow-sm mb-3"><div className="card-body p-3 p-md-4">
+          <h2 className="h6 fw-bold mb-1">Nama aplikasi &amp; logo</h2>
+          <p className="small text-secondary mb-3">Tampil di menu samping admin, halaman login, halaman responden, kartu QR, dan tab browser.</p>
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold" htmlFor="an">Nama aplikasi</label>
+              <input id="an" name="app_name" className="form-control" defaultValue={s.app_name} maxLength={80} required placeholder="Angket SMKN 3 Kepulauan Selayar" />
+              <div className="form-text">Contoh: Angket SMKN 3 Kepulauan Selayar</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small fw-semibold" htmlFor="sn">Nama sekolah</label>
+              <input id="sn" name="school_name" className="form-control" defaultValue={s.school_name} maxLength={80} />
+            </div>
+            <div className="col-md-8">
+              <label className="form-label small fw-semibold" htmlFor="lg">Ganti logo (PNG/JPG/SVG, maks. 900 KB)</label>
+              <input id="lg" name="logo" type="file" accept="image/*" className="form-control" />
+              {s.logo_url && (
+                <div className="form-check mt-2">
+                  <input className="form-check-input" type="checkbox" name="reset_logo" id="rl" />
+                  <label className="form-check-label small" htmlFor="rl">Kembalikan ke logo bawaan SMKN 3 Kepulauan Selayar</label>
+                </div>
+              )}
+            </div>
+            <div className="col-md-4 d-flex align-items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={brand.logo} width={56} height={52} alt="Logo saat ini" className="logo" />
+              <span className="small text-secondary">Logo saat ini, tampil di semua halaman.</span>
+            </div>
+          </div>
+        </div></div>
+
         <div className="card border-0 shadow-sm mb-3"><div className="card-body p-3 p-md-4">
           <h2 className="h6 fw-bold mb-1">Desain editor pertanyaan (admin)</h2>
           <p className="small text-secondary mb-3">Tampilan bawaan saat admin membuka editor. Tetap bisa diganti sementara lewat tombol di atas editor.</p>
@@ -61,35 +92,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 <div className="fw-bold">B. Obrolan</div>
                 <div className="small text-secondary">Seperti chat WhatsApp. Akrab bagi siswa, jawaban bisa diketuk untuk diubah.</div>
               </label>
-            </div>
-          </div>
-        </div></div>
-
-        <div className="card border-0 shadow-sm mb-3"><div className="card-body p-3 p-md-4">
-          <h2 className="h6 fw-bold mb-3">Identitas</h2>
-          <div className="row g-3">
-            <div className="col-md-6">
-              <label className="form-label small fw-semibold" htmlFor="an">Nama aplikasi</label>
-              <input id="an" name="app_name" className="form-control" defaultValue={s.app_name} maxLength={80} />
-            </div>
-            <div className="col-md-6">
-              <label className="form-label small fw-semibold" htmlFor="sn">Nama sekolah</label>
-              <input id="sn" name="school_name" className="form-control" defaultValue={s.school_name} maxLength={80} />
-            </div>
-            <div className="col-md-8">
-              <label className="form-label small fw-semibold" htmlFor="lg">Ganti logo (PNG/JPG/SVG, maks. 900 KB)</label>
-              <input id="lg" name="logo" type="file" accept="image/*" className="form-control" />
-              {s.logo_url && (
-                <div className="form-check mt-2">
-                  <input className="form-check-input" type="checkbox" name="reset_logo" id="rl" />
-                  <label className="form-check-label small" htmlFor="rl">Kembalikan ke logo bawaan SMKN 3 Kepulauan Selayar</label>
-                </div>
-              )}
-            </div>
-            <div className="col-md-4 d-flex align-items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={brand.logo} width={56} height={52} alt="Logo saat ini" className="logo" />
-              <span className="small text-secondary">Logo saat ini, tampil di semua halaman.</span>
             </div>
           </div>
         </div></div>

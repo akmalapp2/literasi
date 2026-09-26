@@ -70,6 +70,11 @@ h1, h2, h3, h4, h5, h6 { color: var(--tinta); }
 .admin-drawer { background: var(--laut); padding: .5rem 1rem 1rem; position: sticky; top: 60px; z-index: 1019; }
 .table > thead th { font-weight: 600; color: #5a6679; font-size: .82rem; background: #EEF2F7; white-space: nowrap; }
 .stat-card .num { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
+.card-s { background: #fff; border: 1px solid var(--garis); border-radius: 14px; }
+.icon-btn { width: 34px; height: 34px; display: inline-grid; place-items: center; padding: 0; }
+/* Desain 1 "Laut": kartu di area admin bergaris tipis, tanpa bayangan */
+main .card.border-0.shadow-sm { border: 1px solid var(--garis) !important; box-shadow: none !important; border-radius: 14px; }
+main .card.border-0.shadow-sm .table { --bs-table-bg: transparent; }
 .list-card { background: #fff; border: 1px solid var(--garis); border-radius: .75rem; padding: .9rem 1rem; }
 .toast-float { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 1090; min-width: 260px; max-width: calc(100% - 24px); }
 

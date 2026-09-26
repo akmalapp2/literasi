@@ -31,12 +31,12 @@ export default async function Dashboard() {
 
   const actions = (f: FormRow) => (
     <div className="d-flex gap-1 flex-wrap justify-content-end">
-      <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${f.id}`} title="Ubah" aria-label="Ubah"><i className="bi bi-pencil" /></Link>
-      <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${f.id}/responden`} title="Link responden" aria-label="Link responden"><i className="bi bi-link-45deg" /></Link>
-      <Link className="btn btn-sm btn-outline-secondary" href={`/hasil/${f.slug}`} title="Lihat hasil" aria-label="Lihat hasil"><i className="bi bi-bar-chart" /></Link>
+      <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/angket/${f.id}`} title="Ubah" aria-label="Ubah"><i className="bi bi-pencil" /></Link>
+      <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/angket/${f.id}/responden`} title="Link responden" aria-label="Link responden"><i className="bi bi-link-45deg" /></Link>
+      <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/hasil/${f.slug}`} title="Lihat hasil" aria-label="Lihat hasil"><i className="bi bi-bar-chart" /></Link>
       <form action={deleteForm}>
         <input type="hidden" name="id" value={f.id} />
-        <ConfirmButton className="btn btn-sm btn-outline-danger" title="Hapus angket"
+        <ConfirmButton className="btn btn-sm btn-outline-danger icon-btn" title="Hapus angket"
           message={`Hapus angket "${f.title}"? Semua pertanyaan, link responden, dan jawaban ikut terhapus dan tidak bisa dikembalikan.`}>
           <i className="bi bi-trash" />
         </ConfirmButton>
@@ -76,7 +76,7 @@ export default async function Dashboard() {
       ) : (
         <>
           {/* Tablet & laptop: tabel */}
-          <div className="card border-0 shadow-sm d-none d-md-block">
+          <div className="card-s d-none d-md-block overflow-hidden">
             <div className="table-responsive">
               <table className="table align-middle mb-0">
                 <thead>
