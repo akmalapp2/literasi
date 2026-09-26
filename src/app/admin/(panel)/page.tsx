@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createForm, deleteForm } from '@/actions/forms';
 import ConfirmButton from '@/components/ConfirmButton';
 import { requireAdmin } from '@/lib/auth';
+import { scheduleText } from '@/lib/form-window';
 import { ROLE_SHORT, formatDay } from '@/lib/text';
 import type { FormRow } from '@/lib/types';
 
@@ -88,7 +89,7 @@ export default async function Dashboard() {
                       <td className="ps-3">
                         <Link href={`/admin/angket/${f.id}`} className="fw-semibold text-body text-decoration-none">{f.title}</Link>
                         <div className="small text-secondary">
-                          {stats[i].q} pertanyaan{f.closes_at ? `, ditutup ${formatDay(f.closes_at)}` : ''}
+                          {stats[i].q} pertanyaan{scheduleText(f) ? `, ${scheduleText(f)}` : ''}{f.closes_at ? `, ditutup ${formatDay(f.closes_at)}` : ''}
                         </div>
                       </td>
                       <td>{f.targets.map((r) => <span key={r} className={`badge-soft role ${r} me-1`}>{ROLE_SHORT[r]}</span>)}</td>

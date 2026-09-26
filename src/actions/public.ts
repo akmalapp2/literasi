@@ -24,7 +24,7 @@ export async function identify(input: IdentifyInput): Promise<{ error: string }>
   const db = createAdminClient();
   const { data: form } = await db
     .from('forms')
-    .select('id, access_mode, access_code, open_id, targets, status, opens_at, closes_at')
+    .select('id, access_mode, access_code, open_id, targets, status, opens_at, closes_at, open_days, open_time, close_time')
     .eq('slug', input.slug)
     .maybeSingle();
   if (!form || form.access_mode === 'token') return { error: 'Angket tidak ditemukan.' };
@@ -80,6 +80,9 @@ const ERRORS: Record<string, string> = {
   ANGKET_TIDAK_DIBUKA: 'Angket sedang tidak dibuka.',
   ANGKET_BELUM_DIBUKA: 'Angket belum dibuka.',
   ANGKET_SUDAH_DITUTUP: 'Angket sudah ditutup.',
+  ANGKET_BUKAN_HARINYA: 'Hari ini bukan jadwal pengisian angket.',
+  ANGKET_BELUM_JAMNYA: 'Belum masuk jam pengisian angket.',
+  ANGKET_LEWAT_JAMNYA: 'Jam pengisian hari ini sudah selesai.',
   TOKEN_TIDAK_VALID: 'Link tidak valid.',
   TOKEN_SUDAH_DIPAKAI: 'Jawaban dari link ini sudah pernah terkirim.',
   TOKEN_DIPERLUKAN: 'Angket ini hanya bisa diisi lewat link pribadi.',
@@ -121,7 +124,11 @@ function clean(q: Question, v: AnswerValue | undefined): { value?: AnswerValue; 
 
 export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
   const db = createAdminClient();
-  const { data: form } = await db.from('forms').select('id, access_mode, open_id, targets').eq('id', input.formId).maybeSingle();
+  const { data: form } = await db
+    .from('forms')
+    .select('id, access_mode, open_id, targets, status, opens_at, closes_at, open_days, open_time, close_time')
+    .eq('id', input.formId)
+    .maybeSingle();
   if (!form) return { ok: false, error: ERRORS.ANGKET_TIDAK_ADA };
 
   let role: Role;

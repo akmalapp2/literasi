@@ -22,6 +22,9 @@ const metaSchema = z.object({
   fill_design: z.enum(['ikut', 'A', 'B']),
   opens_at: z.string().nullable(),
   closes_at: z.string().nullable(),
+  open_days: z.array(z.number().int().min(0).max(6)).max(7),
+  open_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Jam buka tidak valid.').nullable(),
+  close_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Jam tutup tidak valid.').nullable(),
   public_results: z.boolean(),
   hide_text_public: z.boolean(),
   results_after_close: z.boolean(),
@@ -98,6 +101,8 @@ export async function saveForm(id: string, meta: FormMeta, questions: Question[]
   if (d.access_mode === 'kode' && !d.access_code) return { ok: false, error: 'Isi kode akses untuk mode "Kode angket + nomor induk".' };
   if (d.opens_at && d.closes_at && new Date(d.closes_at) <= new Date(d.opens_at))
     return { ok: false, error: 'Waktu ditutup harus setelah waktu dibuka.' };
+  if (d.open_time && d.close_time && d.close_time.slice(0, 5) <= d.open_time.slice(0, 5))
+    return { ok: false, error: 'Jam tutup harus setelah jam buka.' };
   if (questions.length === 0) return { ok: false, error: 'Angket butuh minimal satu pertanyaan.' };
 
   const cleaned = questions.map((q) => ({
@@ -116,7 +121,11 @@ export async function saveForm(id: string, meta: FormMeta, questions: Question[]
 
   const { error: fErr } = await supabase
     .from('forms')
-    .update({ ...d, access_code: d.access_code ? d.access_code.toUpperCase() : null })
+    .update({
+      ...d,
+      access_code: d.access_code ? d.access_code.toUpperCase() : null,
+      open_days: Array.from(new Set(d.open_days)).sort(),
+    })
     .eq('id', id);
   if (fErr) {
     if (fErr.code === '23505') return { ok: false, error: 'Alamat angket sudah dipakai angket lain. Ganti alamatnya.' };

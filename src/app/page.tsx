@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { BrandMark } from '@/components/Brand';
-import { formWindow, resultsVisible } from '@/lib/form-window';
+import { formWindow, resultsVisible, scheduleText } from '@/lib/form-window';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatDay } from '@/lib/text';
@@ -11,11 +11,14 @@ export default async function Home() {
   const brand = toBrand(await getSettings());
   const { data } = await createAdminClient()
     .from('forms')
-    .select('id, slug, title, status, access_mode, opens_at, closes_at, public_results, results_after_close')
+    .select('id, slug, title, status, access_mode, opens_at, closes_at, open_days, open_time, close_time, public_results, results_after_close')
     .neq('status', 'draf')
     .order('created_at', { ascending: false });
   const forms = (data ?? []) as FormRow[];
-  const open = forms.filter((f) => f.access_mode !== 'token' && formWindow(f).open);
+  // Tampilkan angket yang sedang dibuka, juga yang terjadwal mingguan (mis. setiap Jumat).
+  const open = forms.filter(
+    (f) => f.access_mode !== 'token' && (formWindow(f).open || (!!scheduleText(f) && formWindow({ ...f, open_days: [], open_time: null, close_time: null }).open)),
+  );
   const results = forms.filter((f) => resultsVisible(f));
 
   return (
@@ -35,6 +38,14 @@ export default async function Home() {
                   <i className="bi bi-pencil-square fs-4 text-primary" />
                   <div className="flex-grow-1 min-w-0">
                     <div className="fw-semibold text-body">{f.title}</div>
+                    {scheduleText(f) && (
+                      <div className="small">
+                        {formWindow(f).open
+                          ? <span className="badge-soft st-terbit me-1">Dibuka sekarang</span>
+                          : <span className="badge-soft st-draf me-1">Belum waktunya</span>}
+                        <span className="text-secondary">Jadwal: {scheduleText(f)}</span>
+                      </div>
+                    )}
                     {f.closes_at && <div className="small text-secondary">Ditutup {formatDay(f.closes_at)}</div>}
                   </div>
                   <i className="bi bi-chevron-right text-secondary" />

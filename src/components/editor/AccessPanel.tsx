@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import CopyButton from '@/components/CopyButton';
+import { DAY_NAMES, DAY_ORDER, scheduleText } from '@/lib/form-window';
 import ClearResponses from './ClearResponses';
 import type { AccessMode, FillDesign, FormMeta } from '@/lib/types';
 import { RoleChips } from './shared';
@@ -116,18 +117,57 @@ export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFil
       </div></div>
 
       <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">
-        <h2 className="h6 fw-bold mb-3">Jadwal</h2>
-        <div className="row g-3">
+        <h2 className="h6 fw-bold mb-1">Jadwal</h2>
+        <p className="small text-secondary mb-3">Semua kolom opsional. Angket hanya bisa diisi saat statusnya Terbit dan sesuai jadwal di bawah.</p>
+
+        <div className="small fw-semibold mb-1">1. Periode</div>
+        <div className="row g-3 mb-4">
           <div className="col-sm-6">
-            <label className="form-label small fw-semibold" htmlFor="buka">Dibuka</label>
+            <label className="form-label small" htmlFor="buka">Mulai tanggal</label>
             <input id="buka" type="datetime-local" className="form-control" value={toLocal(meta.opens_at)} onChange={(e) => setMeta({ opens_at: fromLocal(e.target.value) })} />
           </div>
           <div className="col-sm-6">
-            <label className="form-label small fw-semibold" htmlFor="tutup">Ditutup</label>
+            <label className="form-label small" htmlFor="tutup">Sampai tanggal</label>
             <input id="tutup" type="datetime-local" className="form-control" value={toLocal(meta.closes_at)} onChange={(e) => setMeta({ closes_at: fromLocal(e.target.value) })} />
           </div>
         </div>
-        <div className="form-text">Kosongkan jika tidak memakai jadwal. Angket hanya bisa diisi saat statusnya Terbit.</div>
+
+        <div className="small fw-semibold mb-1">2. Hari buka setiap minggu</div>
+        <div className="d-flex flex-wrap gap-2 mb-2" role="group" aria-label="Hari buka">
+          {DAY_ORDER.map((d) => {
+            const on = meta.open_days.includes(d);
+            return (
+              <button type="button" key={d} className={`chip-role ${on ? 'on' : ''}`} aria-pressed={on}
+                onClick={() => setMeta({ open_days: on ? meta.open_days.filter((x) => x !== d) : [...meta.open_days, d] })}>
+                {DAY_NAMES[d]}
+              </button>
+            );
+          })}
+        </div>
+        <div className="d-flex flex-wrap gap-3 small mb-4">
+          <button type="button" className="btn btn-link btn-sm p-0" onClick={() => setMeta({ open_days: [5] })}>Setiap Jumat</button>
+          <button type="button" className="btn btn-link btn-sm p-0" onClick={() => setMeta({ open_days: [1, 2, 3, 4, 5] })}>Hari sekolah (Senin–Jumat)</button>
+          <button type="button" className="btn btn-link btn-sm p-0" onClick={() => setMeta({ open_days: [] })}>Setiap hari</button>
+        </div>
+
+        <div className="small fw-semibold mb-1">3. Jam buka (WITA)</div>
+        <div className="row g-3">
+          <div className="col-6 col-sm-4">
+            <label className="form-label small" htmlFor="jamBuka">Dari jam</label>
+            <input id="jamBuka" type="time" className="form-control" value={meta.open_time ?? ''} onChange={(e) => setMeta({ open_time: e.target.value || null })} />
+          </div>
+          <div className="col-6 col-sm-4">
+            <label className="form-label small" htmlFor="jamTutup">Sampai jam</label>
+            <input id="jamTutup" type="time" className="form-control" value={meta.close_time ?? ''} onChange={(e) => setMeta({ close_time: e.target.value || null })} />
+          </div>
+        </div>
+
+        <div className="alert alert-info small py-2 mt-3 mb-0">
+          <i className="bi bi-calendar-week me-1" />
+          {scheduleText(meta)
+            ? <>Angket dibuka <strong>{scheduleText(meta)}</strong>. Di luar jadwal ini, responden melihat pesan &quot;Belum waktunya mengisi&quot;.</>
+            : <>Tanpa jadwal mingguan: angket bisa diisi kapan saja selama statusnya Terbit.</>}
+        </div>
       </div></div>
 
       <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">

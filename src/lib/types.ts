@@ -45,6 +45,11 @@ export type FormMeta = {
   fill_design: 'ikut' | FillDesign;
   opens_at: string | null;
   closes_at: string | null;
+  /** Hari buka mingguan: 0=Minggu … 6=Sabtu. Kosong = setiap hari. */
+  open_days: number[];
+  /** Jam buka/tutup harian (WITA), format "HH:MM". */
+  open_time: string | null;
+  close_time: string | null;
   public_results: boolean;
   hide_text_public: boolean;
   results_after_close: boolean;
