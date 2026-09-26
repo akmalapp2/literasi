@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { submitAnswers } from '@/actions/public';
 import { BrandMark } from '@/components/Brand';
-import { ROLE_LABEL } from '@/lib/text';
+import { ROLE_LABEL, greetingName } from '@/lib/text';
 import type { AnswerValue, Answers, Brand, FillDesign, Question, Role } from '@/lib/types';
 import DesignA from './DesignA';
 import DesignB from './DesignB';
@@ -98,7 +98,7 @@ export default function FillApp(props: Props) {
           </div>
           <h1 className="q-big mb-2">Jawaban terkirim</h1>
           <p className="text-secondary">
-            Terima kasih{respondent ? `, ${role === 'siswa' ? respondent.name.split(/\s+/)[0] : 'Bapak/Ibu'}` : ''}.{' '}
+            Terima kasih{respondent ? `, ${greetingName(respondent.name, respondent.role)}` : ''}.{' '}
             {mode === 'token' ? 'Link ini sudah tidak bisa dipakai lagi.' : mode === 'preview' ? '(Mode pratinjau, tidak ada yang disimpan.)' : ''}
           </p>
           {form.showResultsLink && mode !== 'preview' && (

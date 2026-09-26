@@ -8,7 +8,7 @@ import { isChoice } from '@/lib/text';
 import { generateSlug } from '@/lib/token';
 import type { ActionResult, FormMeta, QSettings, Question } from '@/lib/types';
 
-const roleEnum = z.enum(['kepsek', 'guru', 'siswa']);
+const roleEnum = z.enum(['kepsek', 'guru', 'tendik', 'siswa', 'ortu', 'alumni', 'umum']);
 
 const metaSchema = z.object({
   title: z.string().trim().min(1, 'Judul angket wajib diisi.').max(200, 'Judul terlalu panjang.'),
@@ -73,9 +73,9 @@ export async function createForm() {
     form_id: data.id,
     position: 0,
     type: 'radio',
-    title: 'Seberapa sering {kamu} membaca buku di luar {tugas}?',
+    title: 'Pertanyaan pertama',
     required: true,
-    options: ['Setiap hari', '2–3 kali seminggu', 'Seminggu sekali', 'Jarang'],
+    options: ['Opsi 1', 'Opsi 2'],
   });
   revalidatePath('/admin');
   redirect(`/admin/angket/${data.id}`);
@@ -94,7 +94,7 @@ export async function saveForm(id: string, meta: FormMeta, questions: Question[]
   const m = metaSchema.safeParse(meta);
   if (!m.success) return { ok: false, error: m.error.issues[0]?.message ?? 'Data angket tidak valid.' };
   const d = m.data;
-  if (d.access_mode === 'kode' && !d.access_code) return { ok: false, error: 'Isi kode akses untuk mode "Kode angket + NISN/NIP".' };
+  if (d.access_mode === 'kode' && !d.access_code) return { ok: false, error: 'Isi kode akses untuk mode "Kode angket + nomor induk".' };
   if (d.opens_at && d.closes_at && new Date(d.closes_at) <= new Date(d.opens_at))
     return { ok: false, error: 'Waktu ditutup harus setelah waktu dibuka.' };
   if (questions.length === 0) return { ok: false, error: 'Angket butuh minimal satu pertanyaan.' };

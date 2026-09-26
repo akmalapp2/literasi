@@ -70,7 +70,7 @@ export default async function Dashboard() {
       {forms.length === 0 ? (
         <div className="list-card text-center py-5">
           <i className="bi bi-ui-checks fs-1 text-primary" />
-          <p className="mt-2 mb-3">Belum ada angket. Buat angket pertama untuk kepala sekolah, guru, dan siswa.</p>
+          <p className="mt-2 mb-3">Belum ada angket. Buat angket pertama untuk warga sekolah atau masyarakat.</p>
           <form action={createForm}><button className="btn btn-primary">Buat angket</button></form>
         </div>
       ) : (

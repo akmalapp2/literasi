@@ -78,7 +78,7 @@ export default function CardsView({ meta, setMeta, qs, ops, active, setActive }:
           </div>
           <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
             <span className="small text-secondary">Tampil untuk:</span>
-            <RoleChips value={q.roles} onChange={(v) => ops.update(i, { roles: v })} />
+            <RoleChips value={q.roles} choices={meta.targets} onChange={(v) => ops.update(i, { roles: v })} />
           </div>
           <div className="d-flex flex-wrap align-items-center justify-content-end gap-1 border-top pt-3">
             <span className="small text-secondary me-auto">

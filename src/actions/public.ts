@@ -8,12 +8,12 @@ import { generateToken } from '@/lib/token';
 import { verifyTurnstile } from '@/lib/turnstile';
 import type { ActionResult, AnswerValue, Answers, Question, Role } from '@/lib/types';
 
-/* ---------- Mode "Kode angket + NISN/NIP" ---------- */
+/* ---------- Mode "Kode angket + nomor induk" ---------- */
 export async function enterWithCode(_prev: { error: string } | null, formData: FormData): Promise<{ error: string }> {
   const slug = String(formData.get('slug') ?? '').trim();
   const code = String(formData.get('code') ?? '').trim().toUpperCase();
   const identifier = String(formData.get('identifier') ?? '').trim();
-  if (!code || !identifier) return { error: 'Isi kode angket dan NISN/NIP.' };
+  if (!code || !identifier) return { error: 'Isi kode angket dan nomor induk.' };
 
   const db = createAdminClient();
   const { data: form } = await db
@@ -32,7 +32,7 @@ export async function enterWithCode(_prev: { error: string } | null, formData: F
     .eq('identifier', identifier)
     .eq('active', true)
     .maybeSingle();
-  if (!person) return { error: 'NISN/NIP tidak terdaftar. Hubungi admin sekolah.' };
+  if (!person) return { error: 'Nomor induk tidak terdaftar. Hubungi admin sekolah.' };
   if (!(form.targets as Role[]).includes(person.role as Role)) return { error: 'Angket ini bukan untuk peran Anda.' };
 
   const { data: tok } = await db

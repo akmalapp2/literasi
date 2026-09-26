@@ -1,6 +1,6 @@
 'use client';
 
-import { TYPE_ICON, isChoice } from '@/lib/text';
+import { ROLE_SHORT, TYPE_ICON, isChoice } from '@/lib/text';
 import type { Brand, FillDesign, FormMeta, Question } from '@/lib/types';
 import PhonePreview from './PhonePreview';
 import { OptionsEditor, RangeFields, RoleChips, RoleDots, TypeChips, type QOps } from './shared';
@@ -40,16 +40,16 @@ export default function PanelView({ meta, setMeta, qs, ops, sel, setSel, brand, 
                 <i className={`bi ${TYPE_ICON[x.type]} text-secondary`} />
                 <span className="ol-t">{x.title || <em className="text-secondary">Tanpa teks</em>}</span>
                 {x.required && <span className="req small">*</span>}
-                <RoleDots roles={x.roles} />
+                <RoleDots roles={x.roles} choices={meta.targets} />
               </button>
             ))}
             <button type="button" className="btn btn-sm btn-outline-primary w-100 mt-2" onClick={() => setSel(ops.add(i < 0 ? n - 1 : i))}>
               <i className="bi bi-plus-lg me-1" />Tambah pertanyaan
             </button>
             <div className="d-flex flex-wrap gap-2 small text-secondary px-2 pt-2">
-              <span><span className="ol-dots"><span className="kepsek" /></span> Kepsek</span>
-              <span><span className="ol-dots"><span className="guru" /></span> Guru</span>
-              <span><span className="ol-dots"><span className="siswa" /></span> Siswa</span>
+              {meta.targets.map((r) => (
+                <span key={r}><span className="ol-dots"><span className={r} /></span> {ROLE_SHORT[r]}</span>
+              ))}
             </div>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function PanelView({ meta, setMeta, qs, ops, sel, setSel, brand, 
                 <label className="form-label small fw-semibold" htmlFor="pTitle">Teks pertanyaan</label>
                 <textarea id="pTitle" className="form-control" rows={2} value={q.title} onChange={(e) => ops.update(i, { title: e.target.value })} />
                 <div className="form-text mb-3">
-                  Tulis <code>{'{kamu}'}</code> agar otomatis menjadi &quot;kamu&quot; untuk siswa dan &quot;Bapak/Ibu&quot; untuk guru &amp; kepala sekolah.
+                  Tulis <code>{'{kamu}'}</code> agar otomatis menjadi &quot;kamu&quot; (siswa), &quot;Anda&quot; (alumni, umum), atau &quot;Bapak/Ibu&quot; (lainnya).
                 </div>
                 <div className="small fw-semibold mb-2">Jenis jawaban</div>
                 <div className="mb-3"><TypeChips value={q.type} onChange={(t) => ops.setType(i, t)} /></div>
@@ -115,7 +115,7 @@ export default function PanelView({ meta, setMeta, qs, ops, sel, setSel, brand, 
                 )}
                 <div className="d-flex flex-wrap gap-2 align-items-center my-3 pt-3 border-top">
                   <span className="small fw-semibold me-1">Tampil untuk</span>
-                  <RoleChips value={q.roles} onChange={(v) => ops.update(i, { roles: v })} />
+                  <RoleChips value={q.roles} choices={meta.targets} onChange={(v) => ops.update(i, { roles: v })} />
                 </div>
                 <div className="form-check form-switch">
                   <input className="form-check-input" type="checkbox" id="pReq" checked={q.required} onChange={(e) => ops.update(i, { required: e.target.checked })} />

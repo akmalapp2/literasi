@@ -57,8 +57,9 @@ export default async function HasilPage({
   const allTotal = participation.every((p) => p.total !== null) ? participation.reduce((a, p) => a + (p.total ?? 0), 0) : null;
 
   let classes: string[] = [];
-  if (form.targets.includes('siswa')) {
-    const { data: cls } = await db.from('respondents').select('class_name').eq('role', 'siswa').not('class_name', 'is', null).range(0, 4999);
+  const classRoles = form.targets.filter((r) => r === 'siswa' || r === 'ortu');
+  if (classRoles.length) {
+    const { data: cls } = await db.from('respondents').select('class_name').in('role', classRoles).not('class_name', 'is', null).range(0, 4999);
     classes = Array.from(new Set<string>((cls ?? []).map((c) => c.class_name as string))).sort((a, b) => a.localeCompare(b, 'id'));
   }
 

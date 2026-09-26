@@ -4,14 +4,20 @@ import { useRef, useState, useTransition } from 'react';
 import * as XLSX from 'xlsx';
 import { importRespondents, type ImportRow } from '@/actions/respondents';
 import Toast, { type ToastMsg } from '@/components/Toast';
-import type { Role } from '@/lib/types';
+import { ROLE_LABEL, usesClass } from '@/lib/text';
+import { ROLES, type Role } from '@/lib/types';
 
-const HEAD = ['Nama', 'NISN/NIP', 'Peran', 'Kelas', 'Mapel/Jabatan', 'No WA'];
+const HEAD = ['Nama', 'Nomor Induk', 'Peran', 'Kelas', 'Mapel/Jabatan', 'No WA'];
 
+/** Kenali peran dari teks bebas di Excel. Urutan penting ("Kepala Tata Usaha" = tendik). */
 function toRole(v: unknown): Role {
-  const s = String(v ?? '').toLowerCase();
+  const s = String(v ?? '').toLowerCase().trim();
+  if (s.includes('orang tua') || s.includes('wali') || s === 'ortu') return 'ortu';
+  if (s.includes('tata usaha') || s.includes('tendik') || s.includes('tenaga') || s.includes('staf') || s === 'tu') return 'tendik';
   if (s.includes('kepala') || s.includes('kepsek')) return 'kepsek';
   if (s.includes('guru')) return 'guru';
+  if (s.includes('alumni')) return 'alumni';
+  if (s.includes('umum') || s.includes('masyarakat')) return 'umum';
   return 'siswa';
 }
 function pick(row: Record<string, unknown>, ...keys: string[]): string {
@@ -19,7 +25,7 @@ function pick(row: Record<string, unknown>, ...keys: string[]): string {
   return found ? String(row[found] ?? '').trim() : '';
 }
 
-/** Impor responden dari file Excel/CSV. Kolom: Nama, NISN/NIP, Peran, Kelas, Mapel/Jabatan, No WA. */
+/** Impor responden dari file Excel/CSV. Kolom: Nama, Nomor Induk, Peran, Kelas, Mapel/Jabatan, No WA. */
 export default function ImportExcel() {
   const file = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ImportRow[] | null>(null);
@@ -36,15 +42,15 @@ export default function ImportExcel() {
           const role = toRole(pick(r, 'peran', 'role', 'status'));
           return {
             name: pick(r, 'nama'),
-            identifier: pick(r, 'nisn', 'nip', 'nuptk', 'nomorinduk', 'identitas'),
+            identifier: pick(r, 'nomorinduk', 'nisn', 'nip', 'nuptk', 'nik', 'identitas'),
             role,
-            class_name: role === 'siswa' ? pick(r, 'kelas', 'rombel') || null : null,
-            subject: role !== 'siswa' ? pick(r, 'mapel', 'jabatan', 'mata') || null : null,
+            class_name: usesClass(role) ? pick(r, 'kelas', 'rombel', 'lulus', 'angkatan') || null : null,
+            subject: !usesClass(role) ? pick(r, 'mapel', 'jabatan', 'mata', 'pekerjaan', 'instansi') || null : null,
             phone: pick(r, 'wa', 'hp', 'telepon', 'telp') || null,
           };
         })
         .filter((r) => r.name && r.identifier);
-      if (!parsed.length) setMsg({ type: 'error', text: 'Tidak ada baris valid. Pastikan ada kolom Nama dan NISN/NIP di baris pertama.' });
+      if (!parsed.length) setMsg({ type: 'error', text: 'Tidak ada baris valid. Pastikan ada kolom Nama dan Nomor Induk di baris pertama.' });
       setRows(parsed.length ? parsed : null);
     } catch {
       setMsg({ type: 'error', text: 'File tidak bisa dibaca. Gunakan .xlsx, .xls, atau .csv.' });
@@ -59,6 +65,9 @@ export default function ImportExcel() {
       ['Andi Pratama', '0081234567', 'Siswa', 'XI NKPI 1', '', '081234567890'],
       ['Nur Aisyah, S.Pd.', '198703152010012005', 'Guru', '', 'Bahasa Indonesia', '081298765432'],
       ['Drs. H. Ahmad', '196805121994031008', 'Kepala Sekolah', '', 'Kepala Sekolah', ''],
+      ['Rahmat', '7301010101800001', 'Tenaga Kependidikan', '', 'Tata Usaha', ''],
+      ['Hj. Sitti', '7301014505750002', 'Orang Tua/Wali', 'XI NKPI 1', '', '081311122233'],
+      ['Rina Amalia', '0071234567', 'Alumni', '2024', '', ''],
     ]);
     ws['!cols'] = [{ wch: 26 }, { wch: 22 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 16 }];
     const wb = XLSX.utils.book_new();
@@ -66,13 +75,12 @@ export default function ImportExcel() {
     XLSX.writeFile(wb, 'template-responden.xlsx');
   };
 
-  const counts = rows
-    ? {
-        kepsek: rows.filter((x) => x.role === 'kepsek').length,
-        guru: rows.filter((x) => x.role === 'guru').length,
-        siswa: rows.filter((x) => x.role === 'siswa').length,
-      }
-    : null;
+  const summary = rows
+    ? ROLES.map((r) => ({ r, n: rows.filter((x) => x.role === r).length }))
+        .filter((x) => x.n > 0)
+        .map((x) => `${x.n} ${ROLE_LABEL[x.r].toLowerCase()}`)
+        .join(', ')
+    : '';
 
   return (
     <>
@@ -83,13 +91,13 @@ export default function ImportExcel() {
         <button type="button" className="btn btn-link px-1" onClick={template} title="Unduh template Excel">Template</button>
         <input ref={file} type="file" className="d-none" accept=".xlsx,.xls,.csv" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
       </div>
-      {rows && counts && (
+      {rows && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style={{ background: 'rgba(19,33,61,.45)', zIndex: 1080 }}>
           <div className="card border-0 shadow" style={{ maxWidth: 440, width: '100%' }} role="dialog" aria-modal="true" aria-labelledby="impTitle">
             <div className="card-body p-4">
               <h2 id="impTitle" className="h5 fw-bold">Impor {rows.length} responden?</h2>
-              <p className="text-secondary mb-2">{counts.kepsek} kepala sekolah, {counts.guru} guru, {counts.siswa} siswa.</p>
-              <p className="small text-secondary">Data dengan NISN/NIP yang sudah ada akan diperbarui, bukan digandakan.</p>
+              <p className="text-secondary mb-2">{summary}.</p>
+              <p className="small text-secondary">Data dengan nomor induk yang sudah ada akan diperbarui, bukan digandakan.</p>
               <div className="d-flex gap-2 justify-content-end">
                 <button type="button" className="btn btn-light" onClick={() => setRows(null)} disabled={pending}>Batal</button>
                 <button

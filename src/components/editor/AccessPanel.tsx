@@ -27,8 +27,8 @@ function randomCode(): string {
 }
 
 const MODES: { v: AccessMode; title: string; text: string; tag?: string }[] = [
-  { v: 'token', title: 'Link / QR pribadi', tag: 'Disarankan', text: 'Tiap kepala sekolah, guru, dan siswa punya link unik. Tanpa login, sekali pakai, nama & peran terisi otomatis.' },
-  { v: 'kode', title: 'Kode angket + NISN/NIP', text: 'Satu link umum. Responden mengetik kode angket dan NISN (siswa) atau NIP/NUPTK (guru, kepala sekolah).' },
+  { v: 'token', title: 'Link / QR pribadi', tag: 'Disarankan', text: 'Tiap responden punya link unik. Tanpa login, sekali pakai, nama & peran terisi otomatis.' },
+  { v: 'kode', title: 'Kode angket + nomor induk', text: 'Satu link umum. Responden mengetik kode angket dan nomor induk yang terdaftar (NISN, NIP, NUPTK, NIK, dll.).' },
   { v: 'terbuka', title: 'Terbuka, anonim', text: 'Siapa pun dengan link bisa mengisi. Dilindungi Turnstile anti-bot; pengisian ganda hanya dicegah per perangkat.' },
 ];
 

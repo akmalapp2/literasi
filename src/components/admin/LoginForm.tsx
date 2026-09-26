@@ -48,7 +48,7 @@ export default function LoginForm({ brand, next, notAdmin }: { brand: Brand; nex
         </div>
       </form>
       <p className="small text-secondary text-center mt-3">
-        Halaman ini khusus admin. Kepala sekolah, guru, dan siswa mengisi angket lewat link atau QR masing-masing.
+        Halaman ini khusus admin. Responden mengisi angket lewat link, kode, atau QR yang dibagikan sekolah.
       </p>
     </div>
   );

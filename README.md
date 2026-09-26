@@ -1,6 +1,7 @@
 # Gerakan Literasi Sekolah — SMKN 3 Kepulauan Selayar
 
-Aplikasi angket (mirip Google Form) untuk kepala sekolah, guru, dan siswa.
+Aplikasi angket serbaguna (mirip Google Form) untuk warga sekolah dan masyarakat. Angket Gerakan Literasi Sekolah adalah salah satu contoh penggunaannya.
+Peran responden: Kepala Sekolah, Guru, Tenaga Kependidikan, Siswa, Orang Tua/Wali, Alumni, dan Masyarakat Umum.
 Satu jenis akun saja: **admin**. Responden mengisi tanpa login.
 
 **Stack:** Next.js 16 (App Router) · Supabase (Postgres, Auth, Storage) · Bootstrap 5 · Chart.js · GitHub + Vercel
@@ -32,7 +33,7 @@ src/lib/                            Supabase client, auth, teks, tipe
 
 ### 1. Supabase
 1. Buat proyek di https://supabase.com (region terdekat: Singapore).
-2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama untuk `0002_tanggal_rentang_lainnya.sql`.
+2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql` dan `0003_peran_tambahan.sql`.
 3. **Authentication → Users → Add user**: buat akun admin (email + kata sandi, centang *Auto Confirm*).
 4. Jadikan akun itu admin (SQL Editor):
    ```sql
@@ -83,4 +84,4 @@ Buat widget di dasbor Cloudflare → Turnstile, lalu isi `NEXT_PUBLIC_TURNSTILE_
 - Halaman hasil publik hanya menampilkan agregat tanpa nama. Jawaban isian bisa disembunyikan per angket.
 
 ## Tips teks pertanyaan
-Tulis `{kamu}` agar otomatis menjadi "kamu" untuk siswa dan "Bapak/Ibu" untuk guru & kepala sekolah, dan `{tugas}` menjadi "jam pelajaran" / "tugas mengajar" / "tugas dinas".
+Tulis `{kamu}` agar otomatis menjadi "kamu" (siswa), "Anda" (alumni, masyarakat umum), atau "Bapak/Ibu" (peran lainnya), dan `{tugas}` menjadi "jam pelajaran" / "tugas mengajar" / "tugas dinas".

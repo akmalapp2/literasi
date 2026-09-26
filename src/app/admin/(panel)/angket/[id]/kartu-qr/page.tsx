@@ -5,7 +5,7 @@ import QRCode from 'qrcode';
 import PrintButton from '@/components/admin/PrintButton';
 import { requireAdmin } from '@/lib/auth';
 import { getSettings, toBrand } from '@/lib/settings';
-import { ROLE_LABEL } from '@/lib/text';
+import { roleDetail } from '@/lib/text';
 import type { Respondent, Role } from '@/lib/types';
 import { getBaseUrl } from '@/lib/url';
 
@@ -77,7 +77,7 @@ export default async function QrPage({
               <img src={c.qr} width={150} height={150} alt={`QR untuk ${c.respondents.name}`} />
               <div className="fw-bold mt-1">{c.respondents.name}</div>
               <div className="small text-secondary">
-                {c.respondents.role === 'siswa' ? `Kelas ${c.respondents.class_name ?? '-'}` : ROLE_LABEL[c.respondents.role]}
+                {roleDetail(c.respondents.role, c.respondents.class_name, c.respondents.subject)}
               </div>
               <div className="small mt-1">Kode: <strong style={{ letterSpacing: '.1em' }}>{c.token}</strong></div>
               <div className="text-secondary" style={{ fontSize: '.65rem', overflowWrap: 'anywhere' }}>{c.url}</div>

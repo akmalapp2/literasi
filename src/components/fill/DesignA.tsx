@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BrandMark } from '@/components/Brand';
 import { endLabel, filled, fmtAnswer, isOther, makeOther, otherLabel, otherText, problem, startLabel } from '@/lib/answers';
-import { KEYS, personalize } from '@/lib/text';
+import { KEYS, greetingName, personalize } from '@/lib/text';
 import type { AnswerValue, Question } from '@/lib/types';
 import type { DesignProps } from './types';
 
@@ -104,7 +104,7 @@ export default function DesignA(p: DesignProps) {
       <>
         <div className="q-num">{p.title}</div>
         <h1 className="q-big">
-          {p.who ? `Halo, ${role === 'siswa' ? p.who.name.split(/\s+/)[0] : 'Bapak/Ibu'}. ` : 'Selamat datang. '}
+          {p.who ? `Halo, ${greetingName(p.who.name, role)}. ` : 'Selamat datang. '}
           Ada {n} pertanyaan singkat untuk {role === 'siswa' ? 'kamu' : 'Anda'}.
         </h1>
         {p.description && <p className="text-secondary" style={{ whiteSpace: 'pre-line' }}>{p.description}</p>}

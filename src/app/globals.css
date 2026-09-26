@@ -54,6 +54,11 @@ h1, h2, h3, h4, h5, h6 { color: var(--tinta); }
 .st-ditutup { background: #E9ECF1; color: #5a6679; }
 .role { background: var(--langit-muda); color: var(--laut); }
 .role.kepsek { background: #FDE7E8; color: var(--kemudi); }
+.role.tendik { background: #E6F4EE; color: var(--hijau); }
+.role.siswa { background: #FFF4CC; color: #7A5A00; }
+.role.ortu { background: #F1E8FB; color: #6B3FA0; }
+.role.alumni { background: #FDEBD9; color: #A0520F; }
+.role.umum { background: #E9ECF1; color: #4a5568; }
 
 /* ============ Admin ============ */
 .sidebar { width: 252px; min-height: 100vh; background: var(--laut); color: #fff; position: sticky; top: 0; align-self: flex-start; }
@@ -89,6 +94,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--tinta); }
 .ol-dots span.kepsek { background: var(--kemudi); }
 .ol-dots span.guru { background: var(--laut-2); }
 .ol-dots span.siswa { background: var(--ikan); }
+.ol-dots span.tendik { background: var(--hijau); }
+.ol-dots span.ortu { background: #8A5CC7; }
+.ol-dots span.alumni { background: #E88A1A; }
+.ol-dots span.umum { background: #8a9bbd; }
 .prev-sticky { position: sticky; top: 16px; }
 @media (max-width: 1199.98px) { .prev-sticky { position: static; } }
 .hp { max-width: 300px; margin: 0 auto; border: 10px solid var(--tinta); border-radius: 34px; background: var(--tinta); box-shadow: 0 12px 30px -14px rgba(11,43,107,.5); }

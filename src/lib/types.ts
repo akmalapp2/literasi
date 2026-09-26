@@ -1,5 +1,5 @@
-export type Role = 'kepsek' | 'guru' | 'siswa';
-export const ROLES: Role[] = ['kepsek', 'guru', 'siswa'];
+export type Role = 'kepsek' | 'guru' | 'tendik' | 'siswa' | 'ortu' | 'alumni' | 'umum';
+export const ROLES: Role[] = ['kepsek', 'guru', 'tendik', 'siswa', 'ortu', 'alumni', 'umum'];
 
 export type QType = 'short' | 'long' | 'radio' | 'checkbox' | 'dropdown' | 'date' | 'range';
 export const QTYPES: QType[] = ['short', 'long', 'radio', 'checkbox', 'dropdown', 'date', 'range'];

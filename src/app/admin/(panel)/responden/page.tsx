@@ -24,7 +24,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
   }
   const [{ data }, { data: cls }, counts] = await Promise.all([
     query,
-    supabase.from('respondents').select('class_name').eq('role', 'siswa').not('class_name', 'is', null).range(0, 4999),
+    supabase.from('respondents').select('class_name').in('role', ['siswa', 'ortu']).not('class_name', 'is', null).range(0, 4999),
     Promise.all(ROLES.map((r) => supabase.from('respondents').select('id', { count: 'exact', head: true }).eq('role', r))),
   ]);
   const people = (data ?? []) as Respondent[];
@@ -43,7 +43,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
         <div>
           <h1 className="h3 page-title mb-0">Responden</h1>
           <p className="text-secondary mb-0">
-            {ROLES.map((r, i) => `${counts[i].count ?? 0} ${ROLE_LABEL[r].toLowerCase()}`).join(', ')}
+            {ROLES.map((r, i) => ({ r, n: counts[i].count ?? 0 })).filter((x) => x.n > 0).map((x) => `${x.n} ${ROLE_LABEL[x.r].toLowerCase()}`).join(', ') || 'Belum ada responden'}
           </p>
         </div>
         <div className="d-flex gap-2">
@@ -66,7 +66,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
                 <input id="rn" name="name" className="form-control" required defaultValue={editing?.name ?? ''} />
               </div>
               <div className="col-md-6">
-                <label className="form-label small fw-semibold" htmlFor="ri">NISN (siswa) / NIP atau NUPTK (guru, kepsek)</label>
+                <label className="form-label small fw-semibold" htmlFor="ri">Nomor induk (NISN / NIP / NUPTK / NIK)</label>
                 <input id="ri" name="identifier" className="form-control" required defaultValue={editing?.identifier ?? ''} />
               </div>
               <div className="col-md-4">
@@ -76,12 +76,12 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
                 </select>
               </div>
               <div className="col-md-4">
-                <label className="form-label small fw-semibold" htmlFor="rk">Kelas (khusus siswa)</label>
+                <label className="form-label small fw-semibold" htmlFor="rk">Kelas (siswa), kelas anak (orang tua), atau tahun lulus (alumni)</label>
                 <input id="rk" name="class_name" className="form-control" list="daftar-kelas" placeholder="mis. XI NKPI 1" defaultValue={editing?.class_name ?? ''} />
                 <datalist id="daftar-kelas">{classes.map((c) => <option key={c} value={c} />)}</datalist>
               </div>
               <div className="col-md-4">
-                <label className="form-label small fw-semibold" htmlFor="rs">Mapel / jabatan (guru, kepsek)</label>
+                <label className="form-label small fw-semibold" htmlFor="rs">Mapel / jabatan / pekerjaan (peran lainnya)</label>
                 <input id="rs" name="subject" className="form-control" defaultValue={editing?.subject ?? ''} />
               </div>
               <div className="col-md-6">
@@ -104,7 +104,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
       )}
 
       <form className="d-flex flex-wrap gap-2 mb-3" method="get">
-        <input name="q" className="form-control" style={{ maxWidth: 260 }} placeholder="Cari nama / NISN / NIP" defaultValue={sp.q ?? ''} aria-label="Cari" />
+        <input name="q" className="form-control" style={{ maxWidth: 260 }} placeholder="Cari nama / nomor induk" defaultValue={sp.q ?? ''} aria-label="Cari" />
         <select name="peran" className="form-select" style={{ maxWidth: 180 }} defaultValue={sp.peran ?? ''} aria-label="Peran">
           <option value="">Semua peran</option>
           {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
@@ -123,7 +123,7 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
           <div className="card border-0 shadow-sm d-none d-md-block">
             <div className="table-responsive">
               <table className="table align-middle mb-0">
-                <thead><tr><th className="ps-3">Nama</th><th>NISN/NIP</th><th>Peran</th><th>Kelas / mapel</th><th>WA</th><th className="text-end pe-3">Aksi</th></tr></thead>
+                <thead><tr><th className="ps-3">Nama</th><th>Nomor induk</th><th>Peran</th><th>Kelas / keterangan</th><th>WA</th><th className="text-end pe-3">Aksi</th></tr></thead>
                 <tbody>
                   {people.map((p) => (
                     <tr key={p.id} className={p.active ? '' : 'text-secondary'}>

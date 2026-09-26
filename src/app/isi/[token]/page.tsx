@@ -5,7 +5,7 @@ import StatusCard from '@/components/StatusCard';
 import { formWindow, resultsVisible } from '@/lib/form-window';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { ROLE_LABEL } from '@/lib/text';
+import { roleDetail } from '@/lib/text';
 import type { FormRow, Question, Role } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Isi angket', robots: { index: false } };
@@ -49,10 +49,7 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
     .eq('form_id', form.id)
     .order('position');
 
-  const detail =
-    person.role === 'siswa'
-      ? `Siswa${person.class_name ? `, kelas ${person.class_name}` : ''}`
-      : `${ROLE_LABEL[person.role]}${person.subject ? `, ${person.subject}` : ''}`;
+  const detail = roleDetail(person.role, person.class_name, person.subject);
   const design = form.fill_design === 'ikut' ? settings.default_fill_design : form.fill_design;
 
   return (

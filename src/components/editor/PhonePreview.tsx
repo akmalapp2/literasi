@@ -99,7 +99,7 @@ export default function PhonePreview({ brand, q, index, total, design, title }: 
                 {text}
               </>
             ) : (
-              <>Halo, Andi! Ada {total} pertanyaan singkat tentang literasi.</>
+              <>Halo, Andi! Ada {total} pertanyaan singkat.</>
             )}
           </div>
         </div>

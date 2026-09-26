@@ -3,9 +3,44 @@ import type { QType, Role } from './types';
 export const ROLE_LABEL: Record<Role, string> = {
   kepsek: 'Kepala Sekolah',
   guru: 'Guru',
+  tendik: 'Tenaga Kependidikan',
   siswa: 'Siswa',
+  ortu: 'Orang Tua/Wali',
+  alumni: 'Alumni',
+  umum: 'Masyarakat Umum',
 };
-export const ROLE_SHORT: Record<Role, string> = { kepsek: 'Kepsek', guru: 'Guru', siswa: 'Siswa' };
+export const ROLE_SHORT: Record<Role, string> = {
+  kepsek: 'Kepsek',
+  guru: 'Guru',
+  tendik: 'Tendik',
+  siswa: 'Siswa',
+  ortu: 'Ortu',
+  alumni: 'Alumni',
+  umum: 'Umum',
+};
+
+/** Peran yang memakai kolom "kelas": siswa (kelas), orang tua (kelas anak), alumni (tahun lulus). */
+export const usesClass = (r: Role) => r === 'siswa' || r === 'ortu' || r === 'alumni';
+
+/** Label kolom kelas/keterangan sesuai peran. */
+export function classLabel(r: Role): string {
+  return r === 'ortu' ? 'Kelas anak' : r === 'alumni' ? 'Tahun lulus' : 'Kelas';
+}
+
+/** Keterangan singkat responden, mis. "Siswa, kelas XI NKPI 1". */
+export function roleDetail(r: Role, className: string | null, subject: string | null): string {
+  if (r === 'siswa') return `Siswa${className ? `, kelas ${className}` : ''}`;
+  if (r === 'ortu') return `Orang tua/wali${className ? `, kelas ${className}` : ''}`;
+  if (r === 'alumni') return `Alumni${className ? `, lulus ${className}` : ''}`;
+  return `${ROLE_LABEL[r]}${subject ? `, ${subject}` : ''}`;
+}
+
+/** Sapaan orang kedua: "kamu" (siswa), "Anda" (alumni, umum), "Bapak/Ibu" (lainnya). */
+export function addressee(r: Role | null | undefined): string {
+  if (!r || r === 'siswa') return 'kamu';
+  if (r === 'alumni' || r === 'umum') return 'Anda';
+  return 'Bapak/Ibu';
+}
 
 export const TYPE_LABEL: Record<QType, string> = {
   short: 'Isian singkat',
@@ -32,16 +67,24 @@ export const isChoice = (t: QType) => t === 'radio' || t === 'checkbox' || t ===
 
 /** Ganti {kamu} dan {tugas} sesuai peran responden. */
 export function personalize(text: string, role: Role | null | undefined): string {
-  const r: Role = role ?? 'siswa';
-  const kamu = r === 'siswa' ? 'kamu' : 'Bapak/Ibu';
-  const tugas = r === 'siswa' ? 'jam pelajaran' : r === 'guru' ? 'tugas mengajar' : 'tugas dinas';
-  const out = text.replaceAll('{kamu}', kamu).replaceAll('{tugas}', tugas);
+  const kamu = addressee(role);
+  const tugas: Record<Role, string> = {
+    siswa: 'jam pelajaran',
+    guru: 'tugas mengajar',
+    kepsek: 'tugas dinas',
+    tendik: 'jam kerja',
+    ortu: 'pekerjaan',
+    alumni: 'pekerjaan',
+    umum: 'pekerjaan',
+  };
+  const out = text.replaceAll('{kamu}', kamu).replaceAll('{tugas}', tugas[role ?? 'siswa']);
   return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
+/** Nama panggilan: nama depan untuk siswa & alumni, selain itu "Bapak/Ibu". */
 export function greetingName(name: string, role: Role): string {
-  if (role !== 'siswa') return 'Bapak/Ibu';
-  return name.split(/\s+/)[0] ?? name;
+  if (role === 'siswa' || role === 'alumni') return name.split(/\s+/)[0] ?? name;
+  return 'Bapak/Ibu';
 }
 
 export function formatDate(iso: string | null): string {
@@ -60,6 +103,6 @@ export function formatDay(iso: string | null): string {
 
 /** Versi netral untuk halaman hasil (dibaca semua peran). */
 export function neutral(text: string): string {
-  const out = text.replaceAll('{kamu}', 'Anda').replaceAll('{tugas}', 'jam pelajaran/tugas');
+  const out = text.replaceAll('{kamu}', 'Anda').replaceAll('{tugas}', 'kegiatan sehari-hari');
   return out.charAt(0).toUpperCase() + out.slice(1);
 }

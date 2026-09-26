@@ -22,8 +22,8 @@ export default function CodeEntry({ brand, slug, title }: { brand: Brand; slug: 
           <input type="hidden" name="slug" value={slug} />
           <label className="form-label fw-semibold" htmlFor="code">Kode angket</label>
           <input id="code" name="code" className="form-control form-control-lg text-uppercase mb-3" autoComplete="off" required maxLength={30} />
-          <label className="form-label fw-semibold" htmlFor="identifier">NISN (siswa) atau NIP/NUPTK (guru, kepala sekolah)</label>
-          <input id="identifier" name="identifier" className="form-control form-control-lg mb-3" inputMode="numeric" autoComplete="off" required maxLength={30} />
+          <label className="form-label fw-semibold" htmlFor="identifier">Nomor induk (NISN, NIP, NUPTK, atau nomor yang didaftarkan sekolah)</label>
+          <input id="identifier" name="identifier" className="form-control form-control-lg mb-3" autoComplete="off" required maxLength={30} />
           {state?.error && <div className="alert alert-danger py-2" role="alert">{state.error}</div>}
           <button className="btn btn-primary btn-lg w-100" disabled={pending}>
             {pending && <span className="spinner-border spinner-border-sm me-2" />}Lanjut

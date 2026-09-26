@@ -59,7 +59,7 @@ export default async function Home() {
           )}
         </section>
         <p className="small text-secondary mt-5">
-          Kepala sekolah, guru, dan siswa mengisi angket lewat link atau QR dari sekolah. <Link href="/admin">Masuk admin</Link>
+          Responden mengisi angket lewat link, kode, atau QR dari sekolah. <Link href="/admin">Masuk admin</Link>
         </p>
       </main>
     </div>

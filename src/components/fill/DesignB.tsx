@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/Brand';
 import { endLabel, filled, fmtAnswer, makeOther, otherLabel, problem, startLabel } from '@/lib/answers';
-import { personalize } from '@/lib/text';
+import { addressee, greetingName, personalize } from '@/lib/text';
 import type { DesignProps } from './types';
 
 type InputKind = 'none' | 'text' | 'long' | 'date' | 'range' | 'other';
@@ -56,7 +56,7 @@ export default function DesignB(p: DesignProps) {
     setTimeout(() => setTyping(false), 550);
   };
 
-  const greet = p.who ? (role === 'siswa' ? p.who.name.split(/\s+/)[0] : 'Bapak/Ibu') : role === 'siswa' ? 'kamu' : 'Bapak/Ibu';
+  const greet = p.who ? greetingName(p.who.name, role) : addressee(role);
   const qLabel = (i: number) => {
     const x = qs[i];
     return (

@@ -22,10 +22,12 @@ export function uid(): string {
   });
 }
 
-export function RoleChips({ value, onChange }: { value: Role[]; onChange: (v: Role[]) => void }) {
+/** Pilih peran. `choices` membatasi pilihan (mis. hanya sasaran angket). */
+export function RoleChips({ value, onChange, choices = ROLES }: { value: Role[]; onChange: (v: Role[]) => void; choices?: Role[] }) {
+  const shown = value.filter((r) => choices.includes(r));
   return (
     <>
-      {ROLES.map((r) => {
+      {choices.map((r) => {
         const on = value.includes(r);
         return (
           <button
@@ -35,7 +37,7 @@ export function RoleChips({ value, onChange }: { value: Role[]; onChange: (v: Ro
             aria-pressed={on}
             onClick={() => {
               if (on) {
-                if (value.length > 1) onChange(value.filter((x) => x !== r));
+                if (shown.length > 1) onChange(value.filter((x) => x !== r));
               } else onChange(ROLES.filter((x) => x === r || value.includes(x)));
             }}
           >
@@ -47,10 +49,10 @@ export function RoleChips({ value, onChange }: { value: Role[]; onChange: (v: Ro
   );
 }
 
-export function RoleDots({ roles }: { roles: Role[] }) {
+export function RoleDots({ roles, choices = ROLES }: { roles: Role[]; choices?: Role[] }) {
   return (
-    <span className="ol-dots" title={roles.map((r) => ROLE_LABEL[r]).join(', ')}>
-      {ROLES.map((r) => (
+    <span className="ol-dots" title={roles.filter((r) => choices.includes(r)).map((r) => ROLE_LABEL[r]).join(', ')}>
+      {choices.map((r) => (
         <span key={r} className={roles.includes(r) ? r : ''} />
       ))}
     </span>

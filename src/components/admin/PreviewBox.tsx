@@ -16,7 +16,11 @@ type Props = {
 const SAMPLE: Record<Role, { name: string; detail: string }> = {
   kepsek: { name: 'Contoh Kepala Sekolah', detail: 'Kepala Sekolah' },
   guru: { name: 'Contoh Guru, S.Pd.', detail: 'Guru, Bahasa Indonesia' },
+  tendik: { name: 'Contoh Staf TU', detail: 'Tenaga Kependidikan, Tata Usaha' },
   siswa: { name: 'Andi Pratama', detail: 'Siswa, kelas XI NKPI 1' },
+  ortu: { name: 'Contoh Orang Tua', detail: 'Orang tua/wali, kelas XI NKPI 1' },
+  alumni: { name: 'Rina Alumni', detail: 'Alumni, lulus 2024' },
+  umum: { name: 'Contoh Warga', detail: 'Masyarakat Umum' },
 };
 
 export default function PreviewBox({ brand, form, questions, targets, initialDesign }: Props) {
