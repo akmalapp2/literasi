@@ -1,4 +1,4 @@
-import type { AnswerValue, QType, Role } from './types';
+import type { QType, Role } from './types';
 
 export const ROLE_LABEL: Record<Role, string> = {
   kepsek: 'Kepala Sekolah',
@@ -13,6 +13,8 @@ export const TYPE_LABEL: Record<QType, string> = {
   radio: 'Pilihan ganda',
   checkbox: 'Kotak centang',
   dropdown: 'Dropdown',
+  date: 'Tanggal',
+  range: 'Rentang angka',
 };
 export const TYPE_ICON: Record<QType, string> = {
   short: 'bi-text-left',
@@ -20,6 +22,8 @@ export const TYPE_ICON: Record<QType, string> = {
   radio: 'bi-record-circle',
   checkbox: 'bi-check-square',
   dropdown: 'bi-menu-button-wide',
+  date: 'bi-calendar-event',
+  range: 'bi-arrow-left-right',
 };
 
 export const KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -33,16 +37,6 @@ export function personalize(text: string, role: Role | null | undefined): string
   const tugas = r === 'siswa' ? 'jam pelajaran' : r === 'guru' ? 'tugas mengajar' : 'tugas dinas';
   const out = text.replaceAll('{kamu}', kamu).replaceAll('{tugas}', tugas);
   return out.charAt(0).toUpperCase() + out.slice(1);
-}
-
-export function isAnswered(v: AnswerValue | undefined): boolean {
-  if (Array.isArray(v)) return v.length > 0;
-  return !!(v && v.trim());
-}
-
-export function fmtAnswer(v: AnswerValue | undefined): string {
-  if (Array.isArray(v)) return v.length ? v.join(', ') : '—';
-  return v && v.trim() ? v : '—';
 }
 
 export function greetingName(name: string, role: Role): string {

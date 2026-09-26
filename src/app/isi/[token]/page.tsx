@@ -45,7 +45,7 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
   const person = tok.respondents as unknown as Person;
   const { data: qrows } = await db
     .from('questions')
-    .select('id, type, title, required, roles, options')
+    .select('id, type, title, required, roles, options, settings')
     .eq('form_id', form.id)
     .order('position');
 

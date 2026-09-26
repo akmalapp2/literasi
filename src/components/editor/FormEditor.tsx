@@ -38,7 +38,7 @@ const VIEWS: { v: EditorView; label: string; icon: string }[] = [
 
 export default function FormEditor({ form, initialQuestions, brand, defaultView, defaultFillDesign, responseCount, baseUrl }: Props) {
   const [meta, setMetaState] = useState<FormMeta>(() => toMeta(form));
-  const [qs, setQsState] = useState<Question[]>(initialQuestions);
+  const [qs, setQsState] = useState<Question[]>(() => initialQuestions.map((q) => ({ ...q, settings: q.settings ?? {} })));
   const [view, setView] = useState<EditorView>(defaultView);
   const [tab, setTab] = useState<'pertanyaan' | 'akses'>('pertanyaan');
   const [active, setActive] = useState(0);
@@ -60,9 +60,20 @@ export default function FormEditor({ form, initialQuestions, brand, defaultView,
   const ops: QOps = {
     update: (i, patch) => setQs((p) => p.map((q, j) => (j === i ? { ...q, ...patch } : q))),
     setType: (i, t) =>
-      setQs((p) => p.map((q, j) => (j !== i ? q : { ...q, type: t, options: isChoice(t) && q.options.length < 2 ? ['Opsi 1', 'Opsi 2'] : q.options }))),
+      setQs((p) =>
+        p.map((q, j) =>
+          j !== i
+            ? q
+            : {
+                ...q,
+                type: t,
+                options: isChoice(t) && q.options.length < 2 ? ['Opsi 1', 'Opsi 2'] : q.options,
+                settings: t === 'range' && !q.settings.start_label ? { ...q.settings, start_label: 'Mulai halaman', end_label: 'sampai halaman' } : q.settings,
+              },
+        ),
+      ),
     add: (after) => {
-      const nq: Question = { id: uid(), type: 'radio', title: 'Pertanyaan baru', required: false, roles: [...meta.targets], options: ['Opsi 1', 'Opsi 2'] };
+      const nq: Question = { id: uid(), type: 'radio', title: 'Pertanyaan baru', required: false, roles: [...meta.targets], options: ['Opsi 1', 'Opsi 2'], settings: {} };
       setQs((p) => {
         const c = [...p];
         c.splice(after + 1, 0, nq);
@@ -73,7 +84,7 @@ export default function FormEditor({ form, initialQuestions, brand, defaultView,
     duplicate: (i) =>
       setQs((p) => {
         const c = [...p];
-        c.splice(i + 1, 0, { ...p[i], id: uid(), options: [...p[i].options], roles: [...p[i].roles] });
+        c.splice(i + 1, 0, { ...p[i], id: uid(), options: [...p[i].options], roles: [...p[i].roles], settings: { ...p[i].settings } });
         return c;
       }),
     remove: (i) => {

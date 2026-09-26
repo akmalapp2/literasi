@@ -26,7 +26,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const { data: form } = await supabase.from('forms').select('slug').eq('id', id).maybeSingle();
   if (!form) return new NextResponse('Angket tidak ditemukan', { status: 404 });
-  const { data: qs } = await supabase.from('questions').select('id, title').eq('form_id', id).order('position');
+  const { data: qs } = await supabase.from('questions').select('id, title, type').eq('form_id', id).order('position');
 
   const responses: Resp[] = [];
   for (let from = 0; ; from += 1000) {
@@ -41,6 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   const answers = new Map<string, Map<string, string>>();
+  const rangeIds = new Set((qs ?? []).filter((q) => q.type === 'range').map((q) => q.id as string));
   const ids = responses.map((r) => r.id);
   for (let i = 0; i < ids.length; i += 200) {
     const chunk = ids.slice(i, i + 200);
@@ -52,7 +53,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         .range(from, from + 999);
       for (const a of (data ?? []) as Ans[]) {
         if (!answers.has(a.response_id)) answers.set(a.response_id, new Map());
-        answers.get(a.response_id)!.set(a.question_id, a.value_list ? a.value_list.join('; ') : a.value_text ?? '');
+        answers.get(a.response_id)!.set(a.question_id, a.value_list ? a.value_list.join(rangeIds.has(a.question_id) ? ' – ' : '; ') : a.value_text ?? '');
       }
       if (!data || data.length < 1000) break;
     }

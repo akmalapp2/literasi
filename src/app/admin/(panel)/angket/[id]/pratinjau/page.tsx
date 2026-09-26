@@ -13,7 +13,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ id: st
   const { data } = await supabase.from('forms').select('*').eq('id', id).maybeSingle();
   if (!data) notFound();
   const form = data as FormRow;
-  const { data: qs } = await supabase.from('questions').select('id, type, title, required, roles, options').eq('form_id', id).order('position');
+  const { data: qs } = await supabase.from('questions').select('id, type, title, required, roles, options, settings').eq('form_id', id).order('position');
   const settings = await getSettings();
   const design = form.fill_design === 'ikut' ? settings.default_fill_design : form.fill_design;
   return (

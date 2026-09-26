@@ -3,7 +3,7 @@
 import { TYPE_ICON, isChoice } from '@/lib/text';
 import type { Brand, FillDesign, FormMeta, Question } from '@/lib/types';
 import PhonePreview from './PhonePreview';
-import { OptionsEditor, RoleChips, RoleDots, TypeChips, type QOps } from './shared';
+import { OptionsEditor, RangeFields, RoleChips, RoleDots, TypeChips, type QOps } from './shared';
 
 type Props = {
   meta: FormMeta;
@@ -100,12 +100,17 @@ export default function PanelView({ meta, setMeta, qs, ops, sel, setSel, brand, 
                 {isChoice(q.type) ? (
                   <div className="mb-2">
                     <div className="small fw-semibold mb-2">Opsi jawaban</div>
-                    <OptionsEditor q={q} compact onChange={(o) => ops.update(i, { options: o })} />
+                    <OptionsEditor q={q} compact onChange={(o) => ops.update(i, { options: o })} onSettings={(st) => ops.update(i, { settings: st })} />
+                  </div>
+                ) : q.type === 'range' ? (
+                  <div className="mb-2">
+                    <div className="small fw-semibold mb-2">Pengaturan rentang</div>
+                    <RangeFields q={q} onSettings={(st) => ops.update(i, { settings: st })} />
                   </div>
                 ) : (
                   <div className="small text-secondary mb-3">
                     <i className="bi bi-info-circle me-1" />
-                    {q.type === 'short' ? 'Responden mengetik jawaban satu baris.' : 'Responden menulis jawaban beberapa kalimat.'}
+                    {q.type === 'short' ? 'Responden mengetik jawaban satu baris.' : q.type === 'date' ? 'Responden memilih tanggal dari kalender.' : 'Responden menulis jawaban beberapa kalimat.'}
                   </div>
                 )}
                 <div className="d-flex flex-wrap gap-2 align-items-center my-3 pt-3 border-top">

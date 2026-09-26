@@ -38,7 +38,10 @@ export default function FillApp(props: Props) {
   const [submitting, startSubmit] = useTransition();
 
   const needTs = mode === 'terbuka' && !!turnstileSiteKey;
-  const qs = useMemo(() => (role ? questions.filter((q) => q.roles.includes(role)) : []), [questions, role]);
+  const qs = useMemo(
+    () => (role ? questions.filter((q) => q.roles.includes(role)).map((q) => ({ ...q, settings: q.settings ?? {} })) : []),
+    [questions, role],
+  );
 
   useEffect(() => {
     if (mode !== 'terbuka') return;

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth';
 import { isChoice } from '@/lib/text';
 import { generateSlug } from '@/lib/token';
-import type { ActionResult, FormMeta, Question } from '@/lib/types';
+import type { ActionResult, FormMeta, QSettings, Question } from '@/lib/types';
 
 const roleEnum = z.enum(['kepsek', 'guru', 'siswa']);
 
@@ -26,14 +26,40 @@ const metaSchema = z.object({
   results_after_close: z.boolean(),
 });
 
+const settingsSchema = z.object({
+  allow_other: z.boolean().optional(),
+  other_label: z.string().max(100, 'Label opsi "Lainnya" terlalu panjang.').optional(),
+  start_label: z.string().max(60, 'Label rentang terlalu panjang.').optional(),
+  end_label: z.string().max(60, 'Label rentang terlalu panjang.').optional(),
+  min: z.number().int().nullable().optional(),
+  max: z.number().int().nullable().optional(),
+});
+
 const questionSchema = z.object({
   id: z.string().uuid(),
-  type: z.enum(['short', 'long', 'radio', 'checkbox', 'dropdown']),
+  type: z.enum(['short', 'long', 'radio', 'checkbox', 'dropdown', 'date', 'range']),
   title: z.string().trim().min(1, 'Ada pertanyaan yang teksnya masih kosong.').max(500, 'Teks pertanyaan terlalu panjang.'),
   required: z.boolean(),
   roles: z.array(roleEnum).min(1, 'Setiap pertanyaan harus tampil untuk minimal satu peran.'),
   options: z.array(z.string().max(200, 'Opsi jawaban terlalu panjang.')).max(30, 'Maksimal 30 opsi per pertanyaan.'),
+  settings: settingsSchema,
 });
+
+/** Simpan hanya pengaturan yang relevan untuk jenis pertanyaannya. */
+function cleanSettings(q: Question): QSettings {
+  const s = q.settings ?? {};
+  if (isChoice(q.type)) return s.allow_other ? { allow_other: true, other_label: (s.other_label ?? '').trim() || 'Lainnya, tuliskan' } : {};
+  if (q.type === 'range') {
+    const num = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? Math.trunc(n) : null);
+    return {
+      start_label: (s.start_label ?? '').trim() || 'Mulai',
+      end_label: (s.end_label ?? '').trim() || 'sampai',
+      min: num(s.min),
+      max: num(s.max),
+    };
+  }
+  return {};
+}
 
 export async function createForm() {
   const { supabase } = await requireAdmin();
@@ -76,11 +102,16 @@ export async function saveForm(id: string, meta: FormMeta, questions: Question[]
   const cleaned = questions.map((q) => ({
     ...q,
     options: isChoice(q.type) ? q.options.map((o) => o.trim()).filter(Boolean) : [],
+    settings: cleanSettings(q),
   }));
   const qs = z.array(questionSchema).safeParse(cleaned);
   if (!qs.success) return { ok: false, error: qs.error.issues[0]?.message ?? 'Pertanyaan tidak valid.' };
   const bad = qs.data.findIndex((q) => isChoice(q.type) && q.options.length < 2);
   if (bad >= 0) return { ok: false, error: `Pertanyaan nomor ${bad + 1} butuh minimal 2 opsi jawaban.` };
+  const badRange = qs.data.findIndex(
+    (q) => q.type === 'range' && typeof q.settings.min === 'number' && typeof q.settings.max === 'number' && q.settings.min > q.settings.max,
+  );
+  if (badRange >= 0) return { ok: false, error: `Pertanyaan nomor ${badRange + 1}: batas terkecil lebih besar dari batas terbesar.` };
 
   const { error: fErr } = await supabase
     .from('forms')
@@ -109,6 +140,7 @@ export async function saveForm(id: string, meta: FormMeta, questions: Question[]
     required: q.required,
     roles: q.roles,
     options: q.options,
+    settings: q.settings,
   }));
   const { error: uErr } = await supabase.from('questions').upsert(rows, { onConflict: 'id' });
   if (uErr) return { ok: false, error: 'Gagal menyimpan pertanyaan: ' + uErr.message };

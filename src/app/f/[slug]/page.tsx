@@ -32,7 +32,7 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
 
   const { data: qrows } = await db
     .from('questions')
-    .select('id, type, title, required, roles, options')
+    .select('id, type, title, required, roles, options, settings')
     .eq('form_id', form.id)
     .order('position');
   const design = form.fill_design === 'ikut' ? settings.default_fill_design : form.fill_design;

@@ -1,8 +1,20 @@
 export type Role = 'kepsek' | 'guru' | 'siswa';
 export const ROLES: Role[] = ['kepsek', 'guru', 'siswa'];
 
-export type QType = 'short' | 'long' | 'radio' | 'checkbox' | 'dropdown';
-export const QTYPES: QType[] = ['short', 'long', 'radio', 'checkbox', 'dropdown'];
+export type QType = 'short' | 'long' | 'radio' | 'checkbox' | 'dropdown' | 'date' | 'range';
+export const QTYPES: QType[] = ['short', 'long', 'radio', 'checkbox', 'dropdown', 'date', 'range'];
+
+/** Pengaturan tambahan per pertanyaan (kolom questions.settings). */
+export type QSettings = {
+  /** Pilihan ganda / kotak centang / dropdown: tambahkan opsi "Lainnya" yang bisa diketik. */
+  allow_other?: boolean;
+  other_label?: string;
+  /** Rentang angka, mis. "Mulai halaman" 2 "sampai halaman" 10. */
+  start_label?: string;
+  end_label?: string;
+  min?: number | null;
+  max?: number | null;
+};
 
 export type Question = {
   id: string;
@@ -11,6 +23,7 @@ export type Question = {
   required: boolean;
   roles: Role[];
   options: string[];
+  settings: QSettings;
 };
 
 export type FormStatus = 'draf' | 'terbit' | 'ditutup';

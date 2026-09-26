@@ -2,7 +2,7 @@
 
 import { TYPE_ICON, TYPE_LABEL, isChoice } from '@/lib/text';
 import type { FormMeta, Question } from '@/lib/types';
-import { OptionsEditor, RoleChips, TextPlaceholder, TypeSelect, type QOps } from './shared';
+import { OptionsEditor, RangeFields, RoleChips, TextPlaceholder, TypeSelect, type QOps } from './shared';
 
 type Props = {
   meta: FormMeta;
@@ -68,7 +68,13 @@ export default function CardsView({ meta, setMeta, qs, ops, active, setActive }:
             </div>
           </div>
           <div className="mb-3">
-            {isChoice(q.type) ? <OptionsEditor q={q} onChange={(o) => ops.update(i, { options: o })} /> : <TextPlaceholder q={q} />}
+            {isChoice(q.type) ? (
+              <OptionsEditor q={q} onChange={(o) => ops.update(i, { options: o })} onSettings={(st) => ops.update(i, { settings: st })} />
+            ) : q.type === 'range' ? (
+              <RangeFields q={q} onSettings={(st) => ops.update(i, { settings: st })} />
+            ) : (
+              <TextPlaceholder q={q} />
+            )}
           </div>
           <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
             <span className="small text-secondary">Tampil untuk:</span>

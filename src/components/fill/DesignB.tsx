@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/Brand';
-import { fmtAnswer, isChoice, personalize } from '@/lib/text';
+import { endLabel, filled, fmtAnswer, makeOther, otherLabel, problem, startLabel } from '@/lib/answers';
+import { personalize } from '@/lib/text';
 import type { DesignProps } from './types';
+
+type InputKind = 'none' | 'text' | 'long' | 'date' | 'range' | 'other';
 
 /** Desain B — percakapan (chat). */
 export default function DesignB(p: DesignProps) {
@@ -13,23 +16,41 @@ export default function DesignB(p: DesignProps) {
   const [typing, setTyping] = useState(false);
   const [sel, setSel] = useState<string[]>([]);
   const [text, setText] = useState('');
+  const [date, setDate] = useState('');
+  const [rng, setRng] = useState<[string, string]>(['', '']);
+  const [otherMode, setOtherMode] = useState(false);
+  const [localErr, setLocalErr] = useState<string | null>(null);
   const thread = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const t = (s: string) => personalize(s, role);
   const q = idx < n ? qs[idx] : undefined;
-  const textMode = !typing && !!q && !isChoice(q.type);
+
+  const kind: InputKind =
+    typing || !q
+      ? 'none'
+      : q.type === 'radio' || q.type === 'checkbox' || q.type === 'dropdown'
+        ? otherMode ? 'other' : 'none'
+        : q.type === 'short' ? 'text' : q.type === 'long' ? 'long' : q.type === 'date' ? 'date' : 'range';
 
   useEffect(() => {
     const el = thread.current;
     if (el) el.scrollTop = el.scrollHeight;
-    if (textMode) input.current?.focus({ preventScroll: true });
-  }, [idx, typing, p.error, textMode]);
+    if (kind !== 'none') input.current?.focus({ preventScroll: true });
+  }, [idx, typing, p.error, kind, localErr]);
+
+  const reset = () => {
+    setSel([]);
+    setText('');
+    setDate('');
+    setRng(['', '']);
+    setOtherMode(false);
+    setLocalErr(null);
+  };
 
   const answer = (v: string | string[]) => {
     if (!q) return;
     setAnswer(q.id, v);
-    setSel([]);
-    setText('');
+    reset();
     setTyping(true);
     setIdx((i) => i + 1);
     setTimeout(() => setTyping(false), 550);
@@ -63,8 +84,8 @@ export default function DesignB(p: DesignProps) {
     items.push(bot(`q${i}`, qLabel(i)));
     items.push(
       <div className="msg me" key={`a${i}`}>
-        <button type="button" className="bubble" title="Ketuk untuk mengubah" onClick={() => { setIdx(i); setTyping(false); }}>
-          {fmtAnswer(answers[qs[i].id])}
+        <button type="button" className="bubble" title="Ketuk untuk mengubah" onClick={() => { reset(); setIdx(i); setTyping(false); }}>
+          {fmtAnswer(qs[i], answers[qs[i].id])}
         </button>
       </div>,
     );
@@ -80,10 +101,22 @@ export default function DesignB(p: DesignProps) {
     );
   } else if (q) {
     items.push(bot(`q${idx}`, qLabel(idx)));
+    const allowOther = !!q.settings?.allow_other;
+    const otherChip = allowOther && (
+      <button type="button" className={`chip ${otherMode ? 'on' : ''}`} aria-pressed={otherMode} onClick={() => setOtherMode((m) => !m)}>
+        <i className="bi bi-pencil me-1" />{otherLabel(q.settings)}
+      </button>
+    );
     if (q.type === 'radio' || q.type === 'dropdown') {
-      chips = q.options.map((o, k) => (
-        <button type="button" key={k} className={`chip ${answers[q.id] === o ? 'on' : ''}`} onClick={() => answer(o)}>{o}</button>
-      ));
+      chips = (
+        <>
+          {q.options.map((o, k) => (
+            <button type="button" key={k} className={`chip ${answers[q.id] === o ? 'on' : ''}`} onClick={() => answer(o)}>{o}</button>
+          ))}
+          {otherChip}
+          {!q.required && <button type="button" className="chip" onClick={() => answer('')}>Lewati</button>}
+        </>
+      );
     } else if (q.type === 'checkbox') {
       chips = (
         <>
@@ -96,9 +129,12 @@ export default function DesignB(p: DesignProps) {
               </button>
             );
           })}
-          <button type="button" className="btn btn-primary btn-sm rounded-pill px-3" disabled={q.required && !sel.length} onClick={() => answer(sel)}>
-            {sel.length ? 'Kirim pilihan' : 'Lewati'}
-          </button>
+          {otherChip}
+          {!otherMode && (
+            <button type="button" className="btn btn-primary btn-sm rounded-pill px-3" disabled={q.required && !sel.length} onClick={() => answer(sel)}>
+              {sel.length ? 'Kirim pilihan' : 'Lewati'}
+            </button>
+          )}
         </>
       );
     } else if (!q.required) {
@@ -116,18 +152,81 @@ export default function DesignB(p: DesignProps) {
             {p.submitting && <span className="spinner-border spinner-border-sm me-2" />}
             {p.submitting ? 'Mengirim…' : 'Kirim jawaban'}
           </button>
-          <button type="button" className="chip" onClick={() => setIdx(0)}>Ulang dari awal</button>
+          <button type="button" className="chip" onClick={() => { reset(); setIdx(0); }}>Ulang dari awal</button>
         </div>
       </div>
     );
   }
 
-  const sendText = () => {
+  /** Kirim isian dari kotak bawah. */
+  const send = () => {
     if (!q) return;
-    const v = text.trim();
-    if (!v && q.required) return;
-    answer(v);
+    setLocalErr(null);
+    if (kind === 'other') {
+      const typed = text.trim();
+      if (!typed) return setLocalErr('Tuliskan jawaban lainnya.');
+      return answer(q.type === 'checkbox' ? [...sel, makeOther(typed)] : makeOther(typed));
+    }
+    if (kind === 'text' || kind === 'long') {
+      const v = text.trim();
+      if (!v && q.required) return;
+      return answer(v);
+    }
+    if (kind === 'date') {
+      if (!date && q.required) return;
+      const err = problem(q, date);
+      if (err) return setLocalErr(err);
+      return answer(date);
+    }
+    if (kind === 'range') {
+      const v = [rng[0], rng[1]];
+      if (q.required && !filled(q, v)) return setLocalErr('Lengkapi kedua angka.');
+      const err = problem(q, v);
+      if (err) return setLocalErr(err);
+      return answer(v);
+    }
   };
+  const onEnter = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      send();
+    }
+  };
+  const canSend =
+    kind === 'other' ? !!text.trim()
+      : kind === 'text' || kind === 'long' ? !q?.required || !!text.trim()
+        : kind === 'date' ? !q?.required || !!date
+          : kind === 'range' ? !!rng[0].trim() || !!rng[1].trim() || !q?.required
+            : false;
+
+  let bar: React.ReactNode;
+  if (kind === 'long') {
+    bar = (
+      <textarea ref={(el) => { input.current = el; }} className="form-control" rows={2} placeholder="Tulis jawaban" maxLength={4000}
+        value={text} onChange={(e) => setText(e.target.value)} aria-label="Jawaban" />
+    );
+  } else if (kind === 'date') {
+    bar = (
+      <input ref={(el) => { input.current = el; }} type="date" className="form-control" value={date} aria-label="Tanggal"
+        onChange={(e) => setDate(e.target.value)} onKeyDown={onEnter} />
+    );
+  } else if (kind === 'range' && q) {
+    bar = (
+      <div className="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+        <input ref={(el) => { input.current = el; }} type="number" inputMode="numeric" className="form-control" placeholder={startLabel(q.settings)}
+          aria-label={startLabel(q.settings)} value={rng[0]} onChange={(e) => setRng([e.target.value, rng[1]])} onKeyDown={onEnter} />
+        <span className="small text-secondary text-nowrap">{endLabel(q.settings)}</span>
+        <input type="number" inputMode="numeric" className="form-control" placeholder="…" aria-label={endLabel(q.settings)}
+          value={rng[1]} onChange={(e) => setRng([rng[0], e.target.value])} onKeyDown={onEnter} />
+      </div>
+    );
+  } else {
+    bar = (
+      <input ref={(el) => { input.current = el; }} className="form-control" disabled={kind === 'none'} maxLength={kind === 'other' ? 200 : 300}
+        placeholder={kind === 'other' && q ? otherLabel(q.settings) : kind === 'text' ? 'Ketik jawaban' : 'Pilih jawaban di atas'}
+        value={text} aria-label="Jawaban" onChange={(e) => setText(e.target.value)} onKeyDown={onEnter} />
+    );
+  }
 
   return (
     <div className="obrolan">
@@ -154,16 +253,10 @@ export default function DesignB(p: DesignProps) {
         </div>
       </div>
       <div className="ob-input">
+        {localErr && <div className="inner small text-danger mb-1" role="alert"><i className="bi bi-exclamation-circle me-1" />{localErr}</div>}
         <div className="inner">
-          {q && q.type === 'long' && textMode ? (
-            <textarea ref={(el) => { input.current = el; }} className="form-control" rows={2} placeholder="Tulis jawaban" maxLength={4000}
-              value={text} onChange={(e) => setText(e.target.value)} aria-label="Jawaban" />
-          ) : (
-            <input ref={(el) => { input.current = el; }} className="form-control" disabled={!textMode} maxLength={300}
-              placeholder={textMode ? 'Ketik jawaban' : 'Pilih jawaban di atas'} value={text} aria-label="Jawaban"
-              onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendText(); } }} />
-          )}
-          <button type="button" className="btn btn-primary" disabled={!textMode || (!!q?.required && !text.trim())} onClick={sendText} title="Kirim" aria-label="Kirim jawaban">
+          {bar}
+          <button type="button" className="btn btn-primary" disabled={kind === 'none' || !canSend} onClick={send} title="Kirim" aria-label="Kirim jawaban">
             <i className="bi bi-send-fill" />
           </button>
         </div>
