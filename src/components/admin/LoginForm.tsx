@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Credit from '@/components/Credit';
-import { showSchoolLine } from '@/components/Brand';
 import { createClient } from '@/lib/supabase/client';
 import type { Brand } from '@/lib/types';
 
@@ -45,7 +44,7 @@ export default function LoginForm({ brand, next, notAdmin }: { brand: Brand; nex
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="logo" src={brand.logo} width={96} height={89} alt={`Logo ${brand.schoolName}`} />
         <h1>{brand.appName}</h1>
-        {showSchoolLine(brand) && <div className="sch">{brand.schoolName}</div>}
+        <div className="sch">{brand.schoolName}</div>
       </div>
 
       <form className="card-l" onSubmit={submit}>

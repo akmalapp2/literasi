@@ -20,7 +20,7 @@ export default async function Dashboard() {
       const [q, r, t] = await Promise.all([
         supabase.from('questions').select('id', { count: 'exact', head: true }).eq('form_id', f.id),
         supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', f.id),
-        f.access_mode === 'terbuka'
+        f.targets.every((r) => r === 'umum')
           ? Promise.resolve({ count: null as number | null })
           : supabase.from('respondents').select('id', { count: 'exact', head: true }).eq('active', true).in('role', f.targets),
       ]);
@@ -48,7 +48,7 @@ export default async function Dashboard() {
     if (s.t === null) return <span className="small">{s.r} jawaban</span>;
     const pct = s.t ? Math.round((s.r / s.t) * 100) : 0;
     return (
-      <div style={{ minWidth: 120 }}>
+      <div style={{ minWidth: 150, maxWidth: 240 }}>
         <div className="small mb-1">{s.r} / {s.t}</div>
         <div className="progress"><div className="progress-bar" style={{ width: `${Math.min(100, pct)}%` }} /></div>
       </div>

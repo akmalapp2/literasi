@@ -48,7 +48,7 @@ export default async function HasilPage({
     form.targets.map(async (r) => {
       const done = await db.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', form.id).eq('role', r);
       const total =
-        form.access_mode === 'terbuka'
+        r === 'umum'
           ? null
           : (await db.from('respondents').select('id', { count: 'exact', head: true }).eq('role', r).eq('active', true)).count;
       return { role: r, done: done.count ?? 0, total };
