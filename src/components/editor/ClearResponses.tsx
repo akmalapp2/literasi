@@ -39,7 +39,7 @@ export default function ClearResponses({ formId, count }: { formId: string; coun
             {pending ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="bi bi-trash me-1" />}
             Hapus semua jawaban ({count})
           </button>
-          <a className="btn btn-link" href={`/admin/angket/${formId}/unduh`}><i className="bi bi-download me-1" />Unduh CSV dulu</a>
+          <a className="btn btn-link" href={`/admin/angket/${formId}/laporan`}><i className="bi bi-download me-1" />Unduh hasil dulu (PDF/Excel)</a>
         </div>
         {count === 0 && !msg && <div className="small text-secondary mt-2">Belum ada jawaban.</div>}
         {msg && <div className={`alert ${msg.ok ? 'alert-success' : 'alert-danger'} py-2 small mt-3 mb-0`} role="status">{msg.text}</div>}

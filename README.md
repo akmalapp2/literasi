@@ -15,7 +15,8 @@ Satu jenis akun saja: **admin**. Responden mengisi tanpa login.
 - 3 mode masuk responden per angket: link/QR pribadi (sekali pakai), kode + nomor induk, atau terbuka (+ Cloudflare Turnstile). Pada mode kode & terbuka, responden memilih peran dulu; siswa masuk dengan NIT (Nomor Induk Taruna), guru & kepala sekolah dengan NIP/NUPTK.
 - Data responden: tambah manual atau impor Excel (ada template).
 - Link pribadi: salin, kirim lewat WhatsApp, cetak kartu QR per kelas, buat ulang link, izinkan isi ulang.
-- Hasil publik tanpa nama, grafik per pertanyaan, saring per peran & kelas. Unduh semua jawaban (CSV untuk Excel).
+- Hasil publik tanpa nama, grafik per pertanyaan, saring per peran & kelas.
+- Unduh hasil sebagai **PDF** (kop sekolah, rekap, daftar responden) atau **Excel** (info, rekap, jawaban lengkap), disaring per tanggal pengisian dan per peran.
 - Tampilan responsif (HP, tablet, laptop). Tabel berubah jadi kartu di HP.
 
 ## Struktur

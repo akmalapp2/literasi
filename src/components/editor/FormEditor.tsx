@@ -175,6 +175,9 @@ export default function FormEditor({ form, initialQuestions, brand, defaultView,
           <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${form.id}/responden`}>
             <i className="bi bi-people" /><span className="d-none d-sm-inline ms-1">Responden</span>
           </Link>
+          <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${form.id}/laporan`} title="Unduh hasil (PDF/Excel)">
+            <i className="bi bi-download" /><span className="d-none d-md-inline ms-1">Unduh hasil</span>
+          </Link>
           <button type="button" className="btn btn-sm btn-primary" onClick={save} disabled={saving}>
             {saving ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="bi bi-check2 me-1" />}
             {saving ? 'Menyimpan…' : 'Simpan'}

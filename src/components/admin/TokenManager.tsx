@@ -94,7 +94,7 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
           Buat link untuk semua responden
         </button>
         <Link className="btn btn-outline-primary" href={qrHref}><i className="bi bi-qr-code me-1" />Cetak kartu QR</Link>
-        <a className="btn btn-outline-primary" href={`/admin/angket/${formId}/unduh`}><i className="bi bi-download me-1" />Unduh jawaban (CSV)</a>
+        <Link className="btn btn-outline-primary" href={`/admin/angket/${formId}/laporan`}><i className="bi bi-download me-1" />Unduh hasil (PDF/Excel)</Link>
       </div></div>
 
       <div className="d-flex flex-wrap gap-2 mb-3">
