@@ -269,7 +269,7 @@ export default function DesignA(p: DesignProps) {
         {top}
         <div className="fokus-body">
           {body}
-          <Credit />
+          <Credit creator={p.brand.creator} />
         </div>
       </div>
       <div className="fokus-nav"><div className="inner">{nav}</div></div>

@@ -14,6 +14,7 @@ export async function saveSettings(formData: FormData) {
     school_name: s('school_name') || 'SMKN 3 Kepulauan Selayar',
     default_fill_design: s('default_fill_design') === 'B' ? 'B' : 'A',
     editor_view: s('editor_view') === 'kartu' ? 'kartu' : 'panel',
+    creator: s('creator'),
     updated_at: new Date().toISOString(),
   };
 

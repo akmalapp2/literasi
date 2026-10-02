@@ -70,7 +70,7 @@ export default async function Home() {
             </div>
           )}
         </section>
-        <Credit className="mt-5" />
+        <Credit creator={brand.creator} className="mt-5" />
       </main>
     </div>
   );

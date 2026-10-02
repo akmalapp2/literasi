@@ -261,7 +261,7 @@ export default function DesignB(p: DesignProps) {
             <i className="bi bi-send-fill" />
           </button>
         </div>
-        <Credit />
+        <Credit creator={brand.creator} />
       </div>
     </div>
   );

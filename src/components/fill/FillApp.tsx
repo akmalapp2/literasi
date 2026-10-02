@@ -106,7 +106,7 @@ export default function FillApp(props: Props) {
           {form.showResultsLink && mode !== 'preview' && (
             <Link className="btn btn-outline-primary" href={`/hasil/${form.slug}`}>Lihat hasil sementara</Link>
           )}
-          <Credit />
+          <Credit creator={brand.creator} />
         </div>
       </div>
     );
@@ -131,7 +131,7 @@ export default function FillApp(props: Props) {
               <i className="bi bi-chevron-right tick" style={{ visibility: 'visible' }} />
             </button>
           ))}
-          <Credit />
+          <Credit creator={brand.creator} />
         </div>
       </div>
     );

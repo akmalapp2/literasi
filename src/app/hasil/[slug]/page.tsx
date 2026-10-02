@@ -123,7 +123,7 @@ export default async function HasilPage({
           Status: {form.status === 'ditutup' ? 'ditutup' : 'sedang berjalan'}
           {form.closes_at ? `, batas pengisian ${formatDate(form.closes_at)} WITA` : ''}.
         </p>
-        <Credit />
+        <Credit creator={brand.creator} />
       </main>
     </div>
   );

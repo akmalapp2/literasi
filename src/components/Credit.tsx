@@ -1,10 +1,9 @@
-import { CREATOR } from '@/lib/text';
-
-/** Kredit hak cipta pembuat aplikasi (footer). */
-export default function Credit({ light = false, className = '' }: { light?: boolean; className?: string }) {
+/** Kredit hak cipta pembuat aplikasi (footer). Teks pembuat diambil dari pengaturan (brand.creator). */
+export default function Credit({ creator, light = false, className = '' }: { creator: string; light?: boolean; className?: string }) {
+  if (!creator.trim()) return null;
   return (
     <p className={`credit ${light ? 'light' : ''} ${className}`}>
-      Hak cipta © {new Date().getFullYear()} {CREATOR}
+      Hak cipta © {new Date().getFullYear()} {creator}
     </p>
   );
 }

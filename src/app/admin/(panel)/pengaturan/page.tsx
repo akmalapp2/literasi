@@ -42,6 +42,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 </div>
               )}
             </div>
+            <div className="col-12">
+              <label className="form-label small fw-semibold" htmlFor="cr">Pembuat aplikasi (footer)</label>
+              <input id="cr" name="creator" className="form-control" defaultValue={s.creator} maxLength={120} placeholder="mis. Akmal Iskandar, S.Pi" />
+              <div className="form-text">Tampil sebagai &quot;Hak cipta © {new Date().getFullYear()} …&quot; di bawah setiap halaman, serta di file PDF/Excel. Kosongkan untuk menyembunyikan.</div>
+            </div>
             <div className="col-md-4 d-flex align-items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={brand.logo} width={56} height={52} alt="Logo saat ini" className="logo" />

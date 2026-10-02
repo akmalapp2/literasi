@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { CREATOR, ROLE_LABEL } from '@/lib/text';
+import { ROLE_LABEL } from '@/lib/text';
 import { formatDateId } from '@/lib/answers';
 import { cellText, filterLabel, roleCounts, summarize, witaDateTime, type ReportData } from '@/lib/report';
 import type { Role } from '@/lib/types';
@@ -96,7 +96,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
         ...roleCounts(data.rows).map((r) => [`  ${ROLE_LABEL[r.role]}`, r.n]),
         ['Diunduh', witaDateTime(new Date().toISOString()) + ' WITA'],
         [],
-        [`Hak cipta © ${new Date().getFullYear()} ${CREATOR}`],
+        ...(data.brand.creator.trim() ? [[`Hak cipta © ${new Date().getFullYear()} ${data.brand.creator}`]] : []),
       ];
       const wsInfo = XLSX.utils.aoa_to_sheet(info);
       wsInfo['!cols'] = [{ wch: 22 }, { wch: 60 }];
@@ -222,11 +222,12 @@ export default function ReportDownloader({ formId, targets }: Props) {
 
       // Nomor halaman + kredit
       const pages = doc.getNumberOfPages();
+      const creditLine = data.brand.creator.trim() ? `Hak cipta © ${new Date().getFullYear()} ${data.brand.creator}` : '';
       for (let p = 1; p <= pages; p++) {
         doc.setPage(p);
         const H = doc.internal.pageSize.getHeight();
         doc.setFontSize(8).setTextColor(107, 122, 144);
-        doc.text(pdfSafe(`Hak cipta © ${new Date().getFullYear()} ${CREATOR}`), M, H - 8);
+        if (creditLine) doc.text(pdfSafe(creditLine), M, H - 8);
         doc.text(`Halaman ${p} dari ${pages}`, W - M, H - 8, { align: 'right' });
       }
 

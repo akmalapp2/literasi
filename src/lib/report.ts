@@ -14,7 +14,7 @@ export type ReportRow = {
 export type ReportQuestion = { id: string; type: QType; title: string; options: string[]; settings: QSettings | null };
 export type ReportData = {
   form: { title: string; slug: string; targets: Role[] };
-  brand: { appName: string; schoolName: string; logo: string };
+  brand: { appName: string; schoolName: string; logo: string; creator: string };
   questions: ReportQuestion[];
   /** Semua tanggal pengisian (WITA) beserta jumlah jawaban, tanpa saringan. */
   dates: { date: string; n: number }[];

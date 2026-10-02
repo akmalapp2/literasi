@@ -67,9 +67,10 @@ export type Settings = {
   logo_url: string | null;
   default_fill_design: FillDesign;
   editor_view: EditorView;
+  creator: string;
 };
 
-export type Brand = { appName: string; schoolName: string; logo: string };
+export type Brand = { appName: string; schoolName: string; logo: string; creator: string };
 
 export type Respondent = {
   id: string;

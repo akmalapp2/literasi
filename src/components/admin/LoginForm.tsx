@@ -73,7 +73,7 @@ export default function LoginForm({ brand, next, notAdmin }: { brand: Brand; nex
         </button>
       </form>
 
-      <Credit light className="text-center" />
+      <Credit creator={brand.creator} light className="text-center" />
     </div>
   );
 }

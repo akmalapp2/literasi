@@ -62,7 +62,7 @@ export default function AdminShell({ brand, email, children }: { brand: Brand; e
             <span className="text-truncate me-2">{email}</span>
             {logout}
           </div>
-          <Credit light className="px-2" />
+          <Credit creator={brand.creator} light className="px-2" />
         </div>
       )}
       <div className="d-flex">
@@ -72,7 +72,7 @@ export default function AdminShell({ brand, email, children }: { brand: Brand; e
           <div className="mt-auto small text-white-50 px-2">
             <div className="text-truncate mb-1">{email}</div>
             {logout}
-            <Credit light />
+            <Credit creator={brand.creator} light />
           </div>
         </aside>
         <main className="flex-grow-1 min-w-0">{children}</main>

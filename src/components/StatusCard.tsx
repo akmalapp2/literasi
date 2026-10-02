@@ -29,7 +29,7 @@ export default function StatusCard({ brand, icon, tone = 'info', title, text, ch
         <h1 className="q-big mb-2">{title}</h1>
         <p className="text-secondary">{text}</p>
         {children}
-        <Credit />
+        <Credit creator={brand.creator} />
       </div>
     </div>
   );

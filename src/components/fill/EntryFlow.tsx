@@ -84,7 +84,7 @@ export default function EntryFlow({ brand, form, targets, questions, design, tur
           <p className="small text-secondary mt-3">
             {role === 'siswa' ? 'NIT tertera di kartu taruna. Belum terdaftar? Hubungi wali kelas.' : 'Belum terdaftar? Hubungi admin sekolah.'}
           </p>
-          <Credit />
+          <Credit creator={brand.creator} />
           <div className="entry-bottom"><div className="inner">
             <button type="button" className="btn btn-light" onClick={() => { setStep('peran'); setError(null); }}>
               <i className="bi bi-arrow-left" /> Kembali
@@ -115,7 +115,7 @@ export default function EntryFlow({ brand, form, targets, questions, design, tur
           </button>
         ))}
         <p className="small text-secondary mt-3 mb-0"><i className="bi bi-shield-lock me-1" />Nama tidak ditampilkan di halaman hasil.</p>
-        <Credit />
+        <Credit creator={brand.creator} />
         <div className="entry-bottom"><div className="inner">
           <button type="button" className="btn btn-primary btn-lg w-100" disabled={!role} onClick={next}>Lanjut</button>
         </div></div>

@@ -9,6 +9,7 @@ const DEFAULTS: Settings = {
   logo_url: null,
   default_fill_design: 'A',
   editor_view: 'panel',
+  creator: 'Akmal Iskandar, S.Pi',
 };
 
 export const getSettings = cache(async (): Promise<Settings> => {
@@ -21,5 +22,5 @@ export const getSettings = cache(async (): Promise<Settings> => {
 });
 
 export function toBrand(s: Settings): Brand {
-  return { appName: s.app_name, schoolName: s.school_name, logo: s.logo_url || '/logo.png' };
+  return { appName: s.app_name, schoolName: s.school_name, logo: s.logo_url || '/logo.png', creator: s.creator };
 }
