@@ -176,6 +176,9 @@ export default function FormEditor({ form, initialQuestions, brand, defaultView,
           <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${form.id}/responden`}>
             <i className="bi bi-people" /><span className="d-none d-sm-inline ms-1">Responden</span>
           </Link>
+          <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${form.id}/jawaban`} title="Lihat jawaban">
+            <i className="bi bi-eye" /><span className="d-none d-md-inline ms-1">Jawaban</span>
+          </Link>
           <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${form.id}/laporan`} title="Unduh hasil (PDF/Excel)">
             <i className="bi bi-download" /><span className="d-none d-md-inline ms-1">Unduh hasil</span>
           </Link>

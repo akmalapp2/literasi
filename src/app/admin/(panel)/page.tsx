@@ -41,6 +41,7 @@ export default async function Dashboard() {
     <div className="d-flex gap-1 flex-wrap justify-content-end">
       <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/angket/${f.id}`} title="Ubah" aria-label="Ubah"><i className="bi bi-pencil" /></Link>
       <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/angket/${f.id}/responden`} title="Link responden" aria-label="Link responden"><i className="bi bi-link-45deg" /></Link>
+      <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/angket/${f.id}/jawaban`} title="Lihat jawaban" aria-label="Lihat jawaban"><i className="bi bi-eye" /></Link>
       <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/admin/angket/${f.id}/laporan`} title="Unduh hasil (PDF/Excel)" aria-label="Unduh hasil"><i className="bi bi-download" /></Link>
       <Link className="btn btn-sm btn-outline-secondary icon-btn" href={`/hasil/${f.slug}`} title="Lihat hasil" aria-label="Lihat hasil"><i className="bi bi-bar-chart" /></Link>
       <form action={deleteForm}>

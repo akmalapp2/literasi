@@ -7,6 +7,7 @@ import type { QSettings, QType, Role } from './types';
 export type ReportRow = {
   submitted_at: string;
   period_key: string | null;
+  source?: string | null;
   name: string | null;
   identifier: string | null;
   role: Role | null;

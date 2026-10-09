@@ -152,6 +152,9 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
                   <span className="badge-soft st-draf">Belum</span>
                 )}
                 <div className="d-flex gap-1">
+                  <Link className="btn btn-sm btn-outline-secondary" href={`/admin/angket/${formId}/jawaban?responden=${r.id}`} title="Lihat jawaban" aria-label={`Lihat jawaban ${r.name}`}>
+                    <i className="bi bi-eye" />
+                  </Link>
                   {!isDone(t) && (
                     <>
                       <CopyButton text={url(t)} />

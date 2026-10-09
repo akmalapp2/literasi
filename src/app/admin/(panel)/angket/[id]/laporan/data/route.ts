@@ -11,6 +11,7 @@ type Resp = {
   class_name: string | null;
   submitted_at: string;
   period_key: string | null;
+  source: string | null;
   respondents: { name: string; identifier: string } | null;
 };
 type Ans = { response_id: string; question_id: string; value_text: string | null; value_list: string[] | null };
@@ -49,7 +50,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   for (let f = 0; ; f += 1000) {
     let q = supabase
       .from('responses')
-      .select('id, role, class_name, submitted_at, period_key, respondents(name, identifier)')
+      .select('id, role, class_name, submitted_at, period_key, source, respondents(name, identifier)')
       .eq('form_id', id);
     if (from) q = q.gte('submitted_at', `${from}T00:00:00+08:00`);
     if (to) q = q.lte('submitted_at', `${to}T23:59:59.999+08:00`);
@@ -80,6 +81,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const rows: ReportRow[] = responses.map((r) => ({
     submitted_at: r.submitted_at,
+    source: r.source,
     period_key: periodKey((form.repeat_mode ?? 'sekali') as RepeatMode, r.submitted_at),
     name: r.respondents?.name ?? null,
     identifier: r.respondents?.identifier ?? null,

@@ -34,7 +34,7 @@ src/lib/                            Supabase client, auth, teks, tipe
 
 ### 1. Supabase
 1. Buat proyek di https://supabase.com (region terdekat: Singapore).
-2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql`, `0003_peran_tambahan.sql`, `0004_identitas_mode_terbuka.sql`, `0005_nama_aplikasi.sql`, `0006_jadwal_mingguan.sql`, `0007_pembuat.sql`, `0008_pengisian_berulang.sql`, `0009_perbaikan_periode.sql`, dan `0010_hasil_per_periode.sql`.
+2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql`, `0003_peran_tambahan.sql`, `0004_identitas_mode_terbuka.sql`, `0005_nama_aplikasi.sql`, `0006_jadwal_mingguan.sql`, `0007_pembuat.sql`, `0008_pengisian_berulang.sql`, `0009_perbaikan_periode.sql`, `0010_hasil_per_periode.sql`, dan `0011_sumber_jawaban.sql`.
 3. **Authentication → Users → Add user**: buat akun admin (email + kata sandi, centang *Auto Confirm*).
 4. Jadikan akun itu admin (SQL Editor):
    ```sql

@@ -147,7 +147,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
     try {
       const XLSX = await import('xlsx');
       const qTitle = (t: string) => t.replaceAll('{kamu}', 'Anda').replaceAll('{tugas}', 'kegiatan');
-      const head = ['No', 'Nama', 'NIP/NIT', 'Peran', 'Kelas', ...data.questions.map((q, i) => `${i + 1}. ${qTitle(q.title)}`), 'Waktu kirim (WITA)'];
+      const head = ['No', 'Nama', 'NIP/NIT', 'Peran', 'Kelas', ...data.questions.map((q, i) => `${i + 1}. ${qTitle(q.title)}`), 'Waktu kirim (WITA)', 'Keterangan'];
       const body = data.rows.map((r, i) => [
         i + 1,
         r.name ?? '(anonim)',
@@ -156,9 +156,10 @@ export default function ReportDownloader({ formId, targets }: Props) {
         r.class_name ?? '',
         ...data.questions.map((q) => cellText(q, r.answers[q.id])),
         witaDateTime(r.submitted_at),
+        r.source === 'admin' ? 'Susulan oleh admin' : '',
       ]);
       const ws = XLSX.utils.aoa_to_sheet([head, ...body]);
-      ws['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, ...data.questions.map(() => ({ wch: 30 })), { wch: 20 }];
+      ws['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, ...data.questions.map(() => ({ wch: 30 })), { wch: 20 }, { wch: 18 }];
       ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: body.length, c: head.length - 1 } }) };
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Data jawaban');
