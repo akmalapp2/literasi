@@ -26,6 +26,8 @@ type Props = {
   turnstileSiteKey?: string | null;
   /** Peran yang sudah dipilih sebelumnya (halaman masuk / pratinjau). */
   presetRole?: Role;
+  /** Kode angket (link umum + peran anonim), diteruskan ke server saat mengirim. */
+  code?: string | null;
 };
 
 export default function FillApp(props: Props) {
@@ -78,6 +80,7 @@ export default function FillApp(props: Props) {
         role: mode === 'terbuka' ? role : null,
         answers,
         turnstileToken: tsToken,
+        code: mode === 'terbuka' ? props.code ?? null : null,
       });
       if (r.ok) {
         setDone(true);

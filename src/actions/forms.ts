@@ -16,7 +16,8 @@ const metaSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]{3,60}$/, 'Alamat angket hanya boleh huruf kecil, angka, dan tanda minus (3–60 karakter).'),
   targets: z.array(roleEnum).min(1, 'Pilih minimal satu sasaran angket.'),
   status: z.enum(['draf', 'terbit', 'ditutup']),
-  access_mode: z.enum(['token', 'kode', 'terbuka']),
+  access_mode: z.enum(['token', 'umum']),
+  require_code: z.boolean(),
   access_code: z.string().trim().max(30).nullable(),
   open_id: z.enum(['none', 'siswa', 'semua']),
   fill_design: z.enum(['ikut', 'A', 'B']),
@@ -99,7 +100,7 @@ export async function saveForm(id: string, meta: FormMeta, questions: Question[]
   const m = metaSchema.safeParse(meta);
   if (!m.success) return { ok: false, error: m.error.issues[0]?.message ?? 'Data angket tidak valid.' };
   const d = m.data;
-  if (d.access_mode === 'kode' && !d.access_code) return { ok: false, error: 'Isi kode akses untuk mode "Kode angket + nomor induk".' };
+  if (d.access_mode === 'umum' && d.require_code && !d.access_code) return { ok: false, error: 'Isi kode angket, atau matikan sakelar "Wajib kode angket".' };
   if (d.opens_at && d.closes_at && new Date(d.closes_at) <= new Date(d.opens_at))
     return { ok: false, error: 'Waktu ditutup harus setelah waktu dibuka.' };
   if (d.open_time && d.close_time && d.close_time.slice(0, 5) <= d.open_time.slice(0, 5))

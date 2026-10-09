@@ -30,9 +30,8 @@ function randomCode(): string {
 }
 
 const MODES: { v: AccessMode; title: string; text: string; tag?: string }[] = [
-  { v: 'token', title: 'Link / QR pribadi', tag: 'Disarankan', text: 'Tiap responden punya link unik. Tanpa pilih peran, sekali pakai, nama & peran terisi otomatis.' },
-  { v: 'kode', title: 'Kode + nomor induk', text: 'Satu link umum. Responden memilih peran, lalu mengetik kode dan nomor induk: NIT untuk siswa, NIP/NUPTK untuk guru & kepala sekolah.' },
-  { v: 'terbuka', title: 'Terbuka', text: 'Satu link umum tanpa kode. Responden memilih peran lalu mengisi. Dilindungi Turnstile anti-bot.' },
+  { v: 'token', title: 'Link / QR pribadi', tag: 'Disarankan', text: 'Tiap responden punya link unik. Tanpa pilih peran; nama & peran terisi otomatis.' },
+  { v: 'umum', title: 'Link umum', text: 'Satu link untuk semua. Responden memilih peran, lalu mengisi NIT/NIP dan/atau kode angket sesuai pengaturan di bawah.' },
 ];
 
 export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFillDesign, responseCount }: Props) {
@@ -59,40 +58,50 @@ export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFil
           </div>
         ))}
 
-        {meta.access_mode === 'terbuka' && (
+        {meta.access_mode === 'umum' && (
           <div className="border-start border-3 border-warning bg-warning-subtle rounded-end p-3 mt-2">
+            <div className="small fw-semibold mb-2">Identitas (NIT/NIP)</div>
+            {(
+              [
+                ['semua', 'Semua peran wajib nomor induk', 'Siswa mengisi NIT, guru & kepala sekolah mengisi NIP/NUPTK. Masyarakat Umum tetap anonim.'],
+                ['siswa', 'Hanya siswa wajib NIT', 'Peran lain mengisi tanpa identitas (dicegah isi ganda per perangkat).'],
+                ['none', 'Tidak ada (anonim)', 'Semua mengisi tanpa identitas. Cocok untuk survei bebas.'],
+              ] as const
+            ).map(([v, t, d]) => (
+              <div className="form-check mb-1" key={v}>
+                <input className="form-check-input" type="radio" name="openid" id={`oid-${v}`} checked={meta.open_id === v} onChange={() => setMeta({ open_id: v })} />
+                <label className="form-check-label" htmlFor={`oid-${v}`}>
+                  <span className="fw-semibold">{t}</span>
+                  <br />
+                  <span className="small text-secondary">{d}</span>
+                </label>
+              </div>
+            ))}
+
+            <hr className="my-3" />
             <div className="form-check form-switch mb-1">
-              <input className="form-check-input" type="checkbox" id="wajibNit" checked={meta.open_id !== 'none'}
-                onChange={(e) => setMeta({ open_id: e.target.checked ? 'siswa' : 'none' })} />
-              <label className="form-check-label fw-semibold" htmlFor="wajibNit">Wajib isi NIT untuk siswa</label>
+              <input className="form-check-input" type="checkbox" id="wajibKode" checked={meta.require_code}
+                onChange={(e) => setMeta({ require_code: e.target.checked, access_code: e.target.checked && !meta.access_code ? randomCode() : meta.access_code })} />
+              <label className="form-check-label fw-semibold" htmlFor="wajibKode">Wajib kode angket</label>
             </div>
-            <div className="small text-secondary mb-2">Siswa mengetik NIT (Nomor Induk Taruna) yang terdaftar. Satu NIT hanya bisa mengisi sekali.</div>
-            <div className="form-check form-switch mb-1">
-              <input className="form-check-input" type="checkbox" id="wajibNip" checked={meta.open_id === 'semua'} disabled={meta.open_id === 'none'}
-                onChange={(e) => setMeta({ open_id: e.target.checked ? 'semua' : 'siswa' })} />
-              <label className="form-check-label fw-semibold" htmlFor="wajibNip">Wajib isi NIP/NUPTK untuk guru, kepala sekolah &amp; peran lain</label>
+            <div className="small text-secondary mb-2">
+              Kata sandi bersama yang diumumkan guru di kelas. Orang yang hanya tahu NIT/NIP orang lain tidak bisa masuk tanpa kode ini.
+              Ganti kode secara berkala (misalnya tiap Jumat) agar kode lama tidak berlaku.
             </div>
-            <div className="small text-secondary">
-              {meta.open_id === 'semua'
-                ? 'Semua responden wajib nomor induk, kecuali Masyarakat Umum yang tetap anonim.'
-                : 'Jika mati, peran selain siswa mengisi tanpa identitas (dicegah isi ganda per perangkat).'}
-            </div>
+            {meta.require_code && (
+              <div className="input-group" style={{ maxWidth: 320 }}>
+                <input id="kode" className="form-control text-uppercase fw-semibold" value={meta.access_code ?? ''} maxLength={30} aria-label="Kode angket"
+                  onChange={(e) => setMeta({ access_code: e.target.value.toUpperCase() || null })} />
+                <button type="button" className="btn btn-outline-secondary" onClick={() => setMeta({ access_code: randomCode() })}>Buat acak</button>
+                <CopyButton text={meta.access_code ?? ''} className="btn btn-outline-secondary" />
+              </div>
+            )}
           </div>
         )}
         {meta.access_mode === 'token' && (
           <Link href={`/admin/angket/${formId}/responden`} className="btn btn-outline-primary mt-2">
             <i className="bi bi-link-45deg me-1" />Kelola link &amp; kartu QR responden
           </Link>
-        )}
-        {meta.access_mode === 'kode' && (
-          <div className="mt-2">
-            <label className="form-label small fw-semibold" htmlFor="kode">Kode akses</label>
-            <div className="input-group mb-2" style={{ maxWidth: 320 }}>
-              <input id="kode" className="form-control text-uppercase" value={meta.access_code ?? ''} maxLength={30}
-                onChange={(e) => setMeta({ access_code: e.target.value.toUpperCase() || null })} />
-              <button type="button" className="btn btn-outline-secondary" onClick={() => setMeta({ access_code: randomCode() })}>Buat acak</button>
-            </div>
-          </div>
         )}
         {meta.access_mode !== 'token' && (
           <div className="mt-2">

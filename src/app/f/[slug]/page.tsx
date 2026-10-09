@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import EntryFlow from '@/components/fill/EntryFlow';
 import StatusCard from '@/components/StatusCard';
+import { needsId } from '@/lib/access';
 import { formWindow, resultsVisible } from '@/lib/form-window';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -28,8 +29,10 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
     );
   }
 
-  // Mode kode: pertanyaan baru dimuat setelah nomor induk dicocokkan (di /isi/[token]).
-  const { data: qrows } = form.access_mode === 'kode' ? { data: [] } : await db
+  // Pertanyaan hanya dimuat bila ada peran yang mengisi tanpa nomor induk;
+  // yang wajib NIT/NIP mengisi di /isi/[token] setelah dicocokkan.
+  const anyAnon = form.targets.some((r) => !needsId(form, r));
+  const { data: qrows } = !anyAnon ? { data: [] } : await db
     .from('questions')
     .select('id, type, title, required, roles, options, settings')
     .eq('form_id', form.id)
@@ -41,7 +44,7 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
       brand={brand}
       form={{
         id: form.id, title: form.title, description: form.description, slug: form.slug,
-        showResultsLink: resultsVisible(form), access_mode: form.access_mode, open_id: form.open_id ?? 'semua',
+        showResultsLink: resultsVisible(form), access_mode: form.access_mode, open_id: form.open_id ?? 'semua', require_code: !!form.require_code,
       }}
       questions={(qrows ?? []) as Question[]}
       design={design}

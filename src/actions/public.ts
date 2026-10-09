@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { formWindow } from '@/lib/form-window';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { needsId } from '@/lib/access';
+import { codeMatches, needsCode, needsId } from '@/lib/access';
 import { buildPayload } from '@/lib/clean-answers';
 import { ROLE_LABEL, idShort } from '@/lib/text';
 import { generateToken } from '@/lib/token';
@@ -26,19 +26,18 @@ export async function identify(input: IdentifyInput): Promise<{ error: string }>
   const db = createAdminClient();
   const { data: form } = await db
     .from('forms')
-    .select('id, access_mode, access_code, open_id, repeat_mode, targets, status, opens_at, closes_at, open_days, open_time, close_time')
+    .select('id, access_mode, access_code, require_code, open_id, repeat_mode, targets, status, opens_at, closes_at, open_days, open_time, close_time')
     .eq('slug', input.slug)
     .maybeSingle();
   if (!form || form.access_mode === 'token') return { error: 'Angket tidak ditemukan.' };
   const w = formWindow(form);
   if (!w.open) return { error: w.title + '.' };
   if (!(form.targets as Role[]).includes(role)) return { error: `Pengisian ini bukan untuk ${ROLE_LABEL[role]}.` };
-  if (form.access_mode === 'kode') {
+  if (needsCode(form)) {
     if (!code) return { error: 'Isi kode angket.' };
-    if ((form.access_code ?? '').toUpperCase() !== code) return { error: 'Kode angket salah.' };
-  } else if (!needsId(form, role)) {
-    return { error: 'Peran ini tidak perlu nomor induk. Muat ulang halaman.' };
+    if (!codeMatches(form.access_code, code)) return { error: 'Kode angket salah.' };
   }
+  if (!needsId(form, role)) return { error: 'Peran ini tidak perlu nomor induk. Muat ulang halaman.' };
 
   const { data: person } = await db
     .from('respondents')
@@ -73,6 +72,22 @@ export async function identify(input: IdentifyInput): Promise<{ error: string }>
   redirect(`/isi/${token}`);
 }
 
+/** Link umum + peran anonim: periksa kode angket sebelum mulai mengisi. */
+export async function checkCode(slug: string, code: string): Promise<{ ok: boolean; error?: string }> {
+  const db = createAdminClient();
+  const { data: form } = await db
+    .from('forms')
+    .select('access_mode, access_code, require_code, status, opens_at, closes_at, open_days, open_time, close_time')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (!form || form.access_mode !== 'umum') return { ok: false, error: 'Angket tidak ditemukan.' };
+  const w = formWindow(form);
+  if (!w.open) return { ok: false, error: w.title + '.' };
+  if (!needsCode(form)) return { ok: true };
+  if (!String(code ?? '').trim()) return { ok: false, error: 'Isi kode angket.' };
+  return codeMatches(form.access_code, code) ? { ok: true } : { ok: false, error: 'Kode angket salah.' };
+}
+
 /* ---------- Kirim jawaban ---------- */
 export type SubmitInput = {
   formId: string;
@@ -81,6 +96,8 @@ export type SubmitInput = {
   role?: Role | null;
   answers: Answers;
   turnstileToken?: string | null;
+  /** Kode angket (link umum + peran anonim). */
+  code?: string | null;
 };
 
 const ERRORS: Record<string, string> = {
@@ -101,7 +118,7 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
   const db = createAdminClient();
   const { data: form } = await db
     .from('forms')
-    .select('id, access_mode, open_id, repeat_mode, targets, status, opens_at, closes_at, open_days, open_time, close_time')
+    .select('id, access_mode, access_code, require_code, open_id, repeat_mode, targets, status, opens_at, closes_at, open_days, open_time, close_time')
     .eq('id', input.formId)
     .maybeSingle();
   if (!form) return { ok: false, error: ERRORS.ANGKET_TIDAK_ADA };
@@ -124,7 +141,8 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
     if (!r.active) return { ok: false, error: 'Data responden ini sedang dinonaktifkan. Hubungi admin sekolah.' };
     role = r.role;
   } else {
-    if (form.access_mode !== 'terbuka') return { ok: false, error: ERRORS.TOKEN_DIPERLUKAN };
+    if (form.access_mode !== 'umum') return { ok: false, error: ERRORS.TOKEN_DIPERLUKAN };
+    if (needsCode(form) && !codeMatches(form.access_code, input.code)) return { ok: false, error: 'Kode angket salah. Muat ulang halaman.' };
     if (!input.role || !(form.targets as Role[]).includes(input.role)) return { ok: false, error: 'Pilih peran Anda terlebih dahulu.' };
     if (needsId(form, input.role)) return { ok: false, error: `Isi ${idShort(input.role)} terlebih dahulu. Muat ulang halaman.` };
     if (!input.deviceId) return { ok: false, error: 'Perangkat tidak dikenali. Muat ulang halaman.' };

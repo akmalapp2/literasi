@@ -66,7 +66,7 @@ export default async function TokensPage({
       </div>
       {form.access_mode !== 'token' && (
         <div className="alert alert-info small">
-          Angket ini memakai mode <strong>{form.access_mode === 'kode' ? 'Kode + nomor induk' : 'Terbuka'}</strong>.
+          Angket ini memakai mode <strong>Link umum</strong>{form.require_code ? <> dengan kode angket <code>{form.access_code}</code></> : null}.
           Link pribadi tetap bisa dipakai, tetapi responden juga bisa masuk lewat <code>{baseUrl}/f/{form.slug}</code>.
         </div>
       )}

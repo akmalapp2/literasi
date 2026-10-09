@@ -26,7 +26,7 @@ type Props = {
 function toMeta(f: FormRow): FormMeta {
   return {
     title: f.title, description: f.description, slug: f.slug, targets: f.targets, status: f.status,
-    access_mode: f.access_mode, access_code: f.access_code, open_id: f.open_id ?? 'semua', fill_design: f.fill_design,
+    access_mode: f.access_mode, access_code: f.access_code, require_code: !!f.require_code, open_id: f.open_id ?? 'semua', fill_design: f.fill_design,
     opens_at: f.opens_at, closes_at: f.closes_at,
     repeat_mode: f.repeat_mode ?? 'sekali',
     open_days: f.open_days ?? [], open_time: f.open_time ? f.open_time.slice(0, 5) : null, close_time: f.close_time ? f.close_time.slice(0, 5) : null, public_results: f.public_results,

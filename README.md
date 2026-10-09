@@ -12,7 +12,7 @@ Satu jenis akun saja: **admin**. Responden mengisi tanpa login.
 - Rentang angka, misalnya "Mulai halaman 2 sampai halaman 10", lengkap dengan rekap rata-rata dan jumlah.
 - Editor dengan 2 tampilan: **1. Kartu** dan **2. Panel + pratinjau HP**. Bawaan dipilih di menu Pengaturan.
 - Halaman isi dengan 2 desain: **A. Fokus satu per satu** dan **B. Obrolan**. Bawaan dipilih di Pengaturan, bisa diganti per angket.
-- 3 mode masuk responden per angket: link/QR pribadi (sekali pakai), kode + nomor induk, atau terbuka (+ Cloudflare Turnstile). Pada mode kode & terbuka, responden memilih peran dulu; siswa masuk dengan NIT (Nomor Induk Taruna), guru & kepala sekolah dengan NIP/NUPTK.
+- 2 mode masuk responden per angket: **Link/QR pribadi**, atau **Link umum** (pilih peran, lalu NIT/NIP sesuai pengaturan: semua peran, hanya siswa, atau anonim; ditambah **kode angket** opsional). Siswa masuk dengan NIT, guru & kepala sekolah dengan NIP/NUPTK.
 - Data responden: tambah manual atau impor Excel (ada template).
 - Link pribadi: salin, kirim lewat WhatsApp, cetak kartu QR per kelas, buat ulang link.
 - Rekap partisipasi per kelas, salin daftar yang belum mengisi (siap tempel ke WhatsApp).
@@ -36,7 +36,7 @@ src/lib/                            Supabase client, auth, teks, tipe
 
 ### 1. Supabase
 1. Buat proyek di https://supabase.com (region terdekat: Singapore).
-2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql`, `0003_peran_tambahan.sql`, `0004_identitas_mode_terbuka.sql`, `0005_nama_aplikasi.sql`, `0006_jadwal_mingguan.sql`, `0007_pembuat.sql`, `0008_pengisian_berulang.sql`, `0009_perbaikan_periode.sql`, `0010_hasil_per_periode.sql`, `0011_sumber_jawaban.sql`, `0012_satu_sumber_status.sql`, dan `0013_sembunyikan_nama_sekolah.sql`.
+2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql`, `0003_peran_tambahan.sql`, `0004_identitas_mode_terbuka.sql`, `0005_nama_aplikasi.sql`, `0006_jadwal_mingguan.sql`, `0007_pembuat.sql`, `0008_pengisian_berulang.sql`, `0009_perbaikan_periode.sql`, `0010_hasil_per_periode.sql`, `0011_sumber_jawaban.sql`, `0012_satu_sumber_status.sql`, `0013_sembunyikan_nama_sekolah.sql`, dan `0014_mode_link_umum.sql`.
 3. **Authentication → Users → Add user**: buat akun admin (email + kata sandi, centang *Auto Confirm*).
 4. Jadikan akun itu admin (SQL Editor):
    ```sql

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { identify } from '@/actions/public';
+import { checkCode, identify } from '@/actions/public';
 import Credit from '@/components/Credit';
-import { needsId } from '@/lib/access';
+import { needsCode, needsGate, needsId } from '@/lib/access';
 import { ID_LABEL, ROLE_LABEL, idShort } from '@/lib/text';
 import type { AccessMode, Brand, FillDesign, OpenId, Question, Role } from '@/lib/types';
 import EntryHero from './EntryHero';
@@ -21,14 +21,17 @@ const ROLE_ICON: Record<Role, string> = {
 
 type Props = {
   brand: Brand;
-  form: { id: string; title: string; description: string; slug: string; showResultsLink: boolean; access_mode: AccessMode; open_id: OpenId };
+  form: {
+    id: string; title: string; description: string; slug: string; showResultsLink: boolean;
+    access_mode: AccessMode; open_id: OpenId; require_code: boolean;
+  };
   targets: Role[];
   questions: Question[];
   design: FillDesign;
   turnstileSiteKey?: string | null;
 };
 
-/** Mode Kode & Terbuka: pilih peran → (nomor induk) → mulai mengisi. */
+/** Link umum: pilih peran → (kode angket dan/atau NIT/NIP) → mulai mengisi. */
 export default function EntryFlow({ brand, form, targets, questions, design, turnstileSiteKey }: Props) {
   const [role, setRole] = useState<Role | null>(targets.length === 1 ? targets[0] : null);
   const [step, setStep] = useState<'peran' | 'identitas' | 'isi'>('peran');
@@ -40,24 +43,35 @@ export default function EntryFlow({ brand, form, targets, questions, design, tur
   if (step === 'isi' && role) {
     return (
       <FillApp brand={brand} form={form} questions={questions} design={design} targets={targets}
-        mode="terbuka" presetRole={role} turnstileSiteKey={turnstileSiteKey} />
+        mode="terbuka" presetRole={role} turnstileSiteKey={turnstileSiteKey} code={needsCode(form) ? code : null} />
     );
   }
 
   const next = () => {
     if (!role) return;
     setError(null);
-    setStep(needsId(form, role) ? 'identitas' : 'isi');
+    setStep(needsGate(form, role) ? 'identitas' : 'isi');
   };
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!role) return;
     setError(null);
     start(async () => {
-      const r = await identify({ slug: form.slug, role, code: form.access_mode === 'kode' ? code : null, identifier: ident });
-      if (r?.error) setError(r.error);
+      if (needsId(form, role)) {
+        // Cocokkan NIT/NIP (+ kode), lalu diarahkan ke halaman isi pribadi.
+        const r = await identify({ slug: form.slug, role, code: withCode ? code : null, identifier: ident });
+        if (r?.error) setError(r.error);
+      } else {
+        // Peran anonim: cukup periksa kode angket.
+        const r = await checkCode(form.slug, code);
+        if (r.ok) setStep('isi');
+        else setError(r.error ?? 'Kode angket salah.');
+      }
     });
   };
+
+  const withCode = needsCode(form);
+  const withId = !!role && needsId(form, role);
 
   if (step === 'identitas' && role) {
     return (
@@ -66,23 +80,28 @@ export default function EntryFlow({ brand, form, targets, questions, design, tur
         <form className="entry-body" onSubmit={submit}>
           <div className="q-num mb-1">{ROLE_LABEL[role]}</div>
           <h2 className="h5 fw-bold mb-3">
-            {form.access_mode === 'kode' ? 'Masukkan kode dan nomor induk' : `Masukkan ${idShort(role)} Anda`}
+            {withCode && withId ? `Masukkan kode angket dan ${idShort(role)}` : withCode ? 'Masukkan kode angket' : `Masukkan ${idShort(role)} Anda`}
           </h2>
           <div className="bg-white border rounded-3 p-3">
-            {form.access_mode === 'kode' && (
+            {withCode && (
               <>
-                <label className="form-label fw-semibold" htmlFor="code">Kode</label>
-                <input id="code" className="form-control form-control-lg text-uppercase mb-3" autoComplete="off" required maxLength={30}
+                <label className="form-label fw-semibold" htmlFor="code">Kode angket</label>
+                <input id="code" className={`form-control form-control-lg text-uppercase ${withId ? 'mb-3' : ''}`} autoComplete="off" required maxLength={30}
                   value={code} onChange={(e) => setCode(e.target.value)} autoFocus />
               </>
             )}
-            <label className="form-label fw-semibold" htmlFor="ident">{ID_LABEL[role]}</label>
-            <input id="ident" className="form-control form-control-lg" inputMode="numeric" autoComplete="off" required maxLength={30}
-              value={ident} onChange={(e) => setIdent(e.target.value)} autoFocus={form.access_mode !== 'kode'} />
+            {withId && (
+              <>
+                <label className="form-label fw-semibold" htmlFor="ident">{ID_LABEL[role]}</label>
+                <input id="ident" className="form-control form-control-lg" inputMode="numeric" autoComplete="off" required maxLength={30}
+                  value={ident} onChange={(e) => setIdent(e.target.value)} autoFocus={!withCode} />
+              </>
+            )}
             {error && <div className="alert alert-danger py-2 small mt-3 mb-0" role="alert">{error}</div>}
           </div>
           <p className="small text-secondary mt-3">
-            {role === 'siswa' ? 'NIT tertera di kartu taruna. Belum terdaftar? Hubungi wali kelas.' : 'Belum terdaftar? Hubungi admin sekolah.'}
+            {withCode && 'Kode angket diumumkan oleh guru atau admin sekolah. '}
+            {withId && (role === 'siswa' ? 'NIT tertera di kartu taruna. Belum terdaftar? Hubungi wali kelas.' : 'Belum terdaftar? Hubungi admin sekolah.')}
           </p>
           <Credit creator={brand.creator} />
           <div className="entry-bottom"><div className="inner">
@@ -109,7 +128,9 @@ export default function EntryFlow({ brand, form, targets, questions, design, tur
             <span className="ic"><i className={`bi ${ROLE_ICON[r]}`} /></span>
             <span>
               <span className="fw-semibold d-block">{ROLE_LABEL[r]}</span>
-              <span className="small text-secondary">{needsId(form, r) ? `Masuk dengan ${idShort(r)}` : 'Tanpa identitas, anonim'}</span>
+              <span className="small text-secondary">
+                {needsId(form, r) ? `Masuk dengan ${needsCode(form) ? 'kode angket + ' : ''}${idShort(r)}` : needsCode(form) ? 'Masuk dengan kode angket, anonim' : 'Tanpa identitas, anonim'}
+              </span>
             </span>
             <i className="bi bi-check-circle-fill tick" />
           </button>
