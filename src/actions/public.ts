@@ -90,6 +90,7 @@ const ERRORS: Record<string, string> = {
   ANGKET_BUKAN_HARINYA: 'Hari ini bukan jadwal pengisian angket.',
   ANGKET_BELUM_JAMNYA: 'Belum masuk jam pengisian angket.',
   ANGKET_LEWAT_JAMNYA: 'Jam pengisian hari ini sudah selesai.',
+  PERANGKAT_SUDAH_MENGISI: 'Jawaban dari perangkat ini sudah terkirim pada periode ini.',
   TOKEN_TIDAK_VALID: 'Link tidak valid.',
   TOKEN_SUDAH_DIPAKAI: 'Jawaban dari link ini sudah pernah terkirim.',
   TOKEN_DIPERLUKAN: 'Angket ini hanya bisa diisi lewat link pribadi.',

@@ -6,7 +6,7 @@ import ResultsCharts, { type QResult } from '@/components/results/ResultsCharts'
 import StatusCard from '@/components/StatusCard';
 import { isAdminSession } from '@/lib/auth';
 import { resultsVisible } from '@/lib/form-window';
-import { PERIOD_WORD, periodKey, periodLabel } from '@/lib/period';
+import { PERIOD_WORD, periodKey, periodLabel, periodRange } from '@/lib/period';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ROLE_LABEL, formatDate } from '@/lib/text';
@@ -49,7 +49,8 @@ export default async function HasilPage({
   const participation = await Promise.all(
     form.targets.map(async (r) => {
       let dq = db.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', form.id).eq('role', r);
-      if (repeat) dq = dq.eq('period_key', periodKey(form.repeat_mode));
+      const rg = periodRange(form.repeat_mode);
+      if (rg) dq = dq.gte('submitted_at', rg.start).lt('submitted_at', rg.end);
       const done = await dq;
       const total =
         r === 'umum'

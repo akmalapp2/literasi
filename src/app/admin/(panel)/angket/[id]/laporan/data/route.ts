@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createClient } from '@/lib/supabase/server';
 import { witaDate, type ReportData, type ReportRow } from '@/lib/report';
-import type { RepeatMode } from '@/lib/period';
+import { periodKey, type RepeatMode } from '@/lib/period';
 import { ROLES, type Role } from '@/lib/types';
 
 type Resp = {
@@ -80,7 +80,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const rows: ReportRow[] = responses.map((r) => ({
     submitted_at: r.submitted_at,
-    period_key: r.period_key,
+    period_key: periodKey((form.repeat_mode ?? 'sekali') as RepeatMode, r.submitted_at),
     name: r.respondents?.name ?? null,
     identifier: r.respondents?.identifier ?? null,
     role: r.role,

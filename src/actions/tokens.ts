@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { generateToken } from '@/lib/token';
 import type { ActionResult } from '@/lib/types';
-import { PERIOD_WORD, periodKey, usedThisPeriod, type RepeatMode } from '@/lib/period';
+import { PERIOD_WORD, periodRange, usedThisPeriod, type RepeatMode } from '@/lib/period';
 
 /** Buat link pribadi untuk semua responden aktif yang sesuai sasaran angket. */
 export async function generateTokens(formId: string): Promise<ActionResult> {
@@ -72,7 +72,8 @@ export async function allowRefill(tokenId: string, formId: string): Promise<Acti
   if (!tok) return { ok: false, error: 'Link tidak ditemukan.' };
   // Mode berulang: hanya jawaban periode ini yang dihapus; riwayat sebelumnya tetap.
   let del = supabase.from('responses').delete().eq('form_id', formId).eq('respondent_id', tok.respondent_id);
-  if (form && form.repeat_mode !== 'sekali') del = del.eq('period_key', periodKey(form.repeat_mode as RepeatMode));
+  const rg = form ? periodRange(form.repeat_mode as RepeatMode) : null;
+  if (rg) del = del.gte('submitted_at', rg.start).lt('submitted_at', rg.end);
   await del;
   const { error } = await supabase
     .from('access_tokens')

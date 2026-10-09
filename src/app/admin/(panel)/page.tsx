@@ -4,7 +4,7 @@ import { createForm, deleteForm } from '@/actions/forms';
 import ConfirmButton from '@/components/ConfirmButton';
 import { requireAdmin } from '@/lib/auth';
 import { scheduleText } from '@/lib/form-window';
-import { PERIOD_WORD, REPEAT_LABEL, periodKey } from '@/lib/period';
+import { PERIOD_WORD, REPEAT_LABEL, periodRange } from '@/lib/period';
 import { ROLE_SHORT, formatDay } from '@/lib/text';
 import type { FormRow } from '@/lib/types';
 
@@ -22,9 +22,12 @@ export default async function Dashboard() {
       const [q, r, t] = await Promise.all([
         supabase.from('questions').select('id', { count: 'exact', head: true }).eq('form_id', f.id),
         // Mode berulang: hitung yang mengisi pada periode sekarang (minggu ini / hari ini).
-        f.repeat_mode && f.repeat_mode !== 'sekali'
-          ? supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', f.id).eq('period_key', periodKey(f.repeat_mode))
-          : supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', f.id),
+        (() => {
+          // Hitung berdasarkan waktu kirim dalam periode sekarang, sesuai mode yang berlaku saat ini.
+          const q = supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', f.id);
+          const rg = periodRange(f.repeat_mode);
+          return rg ? q.gte('submitted_at', rg.start).lt('submitted_at', rg.end) : q;
+        })(),
         f.targets.every((r) => r === 'umum')
           ? Promise.resolve({ count: null as number | null })
           : supabase.from('respondents').select('id', { count: 'exact', head: true }).eq('active', true).in('role', f.targets),

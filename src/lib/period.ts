@@ -57,3 +57,16 @@ export function periodLabel(key: string): string {
   }
   return 'Sekali';
 }
+
+/**
+ * Rentang waktu periode yang sedang berjalan (UTC ISO), dihitung dari mode SAAT INI.
+ * Dipakai untuk menghitung "sudah mengisi minggu ini" berdasarkan waktu kirim, sehingga
+ * tetap benar walaupun mode pengisian pernah diganti. null untuk mode "sekali".
+ */
+export function periodRange(mode: RepeatMode | null | undefined, now: Date = new Date()): { start: string; end: string } | null {
+  if (mode !== 'mingguan' && mode !== 'harian') return null;
+  const key = periodKey(mode, now);
+  const start = new Date(`${key.slice(1)}T00:00:00+08:00`);
+  const end = new Date(start.getTime() + (mode === 'mingguan' ? 7 : 1) * 86400000);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
