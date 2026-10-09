@@ -39,7 +39,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
   const [peran, setPeran] = useState<Role | ''>('');
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<'pdf' | 'xlsx' | null>(null);
+  const [busy, setBusy] = useState<'pdf' | 'xlsx' | 'data' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const range = useMemo(() => {
@@ -135,6 +135,36 @@ export default function ReportDownloader({ formId, targets }: Props) {
       XLSX.writeFile(wb, `${slugPart(fileBase)}.xlsx`);
     } catch {
       setError('Gagal membuat file Excel.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /* ---------------- Data jawaban (satu lembar) ---------------- */
+  const downloadAnswers = async () => {
+    if (!data) return;
+    setBusy('data');
+    try {
+      const XLSX = await import('xlsx');
+      const qTitle = (t: string) => t.replaceAll('{kamu}', 'Anda').replaceAll('{tugas}', 'kegiatan');
+      const head = ['No', 'Nama', 'NIP/NIT', 'Peran', 'Kelas', ...data.questions.map((q, i) => `${i + 1}. ${qTitle(q.title)}`), 'Waktu kirim (WITA)'];
+      const body = data.rows.map((r, i) => [
+        i + 1,
+        r.name ?? '(anonim)',
+        r.identifier ?? '',
+        r.role ? ROLE_LABEL[r.role] : '',
+        r.class_name ?? '',
+        ...data.questions.map((q) => cellText(q, r.answers[q.id])),
+        witaDateTime(r.submitted_at),
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([head, ...body]);
+      ws['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, ...data.questions.map(() => ({ wch: 30 })), { wch: 20 }];
+      ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: body.length, c: head.length - 1 } }) };
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Data jawaban');
+      XLSX.writeFile(wb, `${slugPart('data-jawaban-' + fileBase.replace(/^hasil-/, ''))}.xlsx`);
+    } catch {
+      setError('Gagal membuat file data jawaban.');
     } finally {
       setBusy(null);
     }
@@ -307,6 +337,10 @@ export default function ReportDownloader({ formId, targets }: Props) {
             {busy === 'xlsx' ? <span className="spinner-border spinner-border-sm me-2" /> : <i className="bi bi-file-earmark-excel me-1" />}
             Unduh Excel
           </button>
+          <button type="button" className="btn btn-outline-success" disabled={loading || !n || !!busy} onClick={downloadAnswers}>
+            {busy === 'data' ? <span className="spinner-border spinner-border-sm me-2" /> : <i className="bi bi-table me-1" />}
+            Unduh data jawaban
+          </button>
           <button type="button" className="btn btn-danger" disabled={loading || !n || !!busy} onClick={downloadPdf}>
             {busy === 'pdf' ? <span className="spinner-border spinner-border-sm me-2" /> : <i className="bi bi-file-earmark-pdf me-1" />}
             Unduh PDF
@@ -314,6 +348,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
         </div>
         <ul className="small text-secondary mt-3 mb-0 ps-3">
           <li><strong>Excel</strong>: lembar Info, Rekap per pertanyaan, dan Jawaban lengkap tiap responden.</li>
+          <li><strong>Data jawaban</strong>: satu lembar Excel sederhana, satu baris per responden: Nama, NIP/NIT, Peran, Kelas, lalu seluruh jawabannya. Bisa langsung disaring dan diurutkan.</li>
           <li><strong>PDF</strong>: kop sekolah, rekap per pertanyaan (jumlah &amp; persen), dan daftar responden. Siap dicetak.</li>
         </ul>
       </div></div>
