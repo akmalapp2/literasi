@@ -9,6 +9,7 @@ import { getSettings, toBrand } from '@/lib/settings';
 import { roleDetail } from '@/lib/text';
 import type { Respondent, Role } from '@/lib/types';
 import { getBaseUrl } from '@/lib/url';
+import { fetchAll } from '@/lib/fetch-all';
 
 export const metadata: Metadata = { title: 'Kartu QR' };
 
@@ -27,8 +28,10 @@ export default async function QrPage({
   const { data: form } = await supabase.from('forms').select('id, title, repeat_mode').eq('id', id).maybeSingle();
   if (!form) notFound();
 
-  const [{ data }, settings, baseUrl] = await Promise.all([
-    supabase.from('access_tokens').select('id, token, used_at, respondents(id, name, identifier, role, class_name, subject, phone)').eq('form_id', id).range(0, 9999),
+  const [data, settings, baseUrl] = await Promise.all([
+    fetchAll((a, b) =>
+      supabase.from('access_tokens').select('id, token, used_at, respondents(id, name, identifier, role, class_name, subject, phone)').eq('form_id', id).order('id').range(a, b),
+    ),
     getSettings(),
     getBaseUrl(),
   ]);

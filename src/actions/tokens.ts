@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth';
 import { generateToken } from '@/lib/token';
 import type { ActionResult } from '@/lib/types';
 import { PERIOD_WORD, periodRange, usedThisPeriod, type RepeatMode } from '@/lib/period';
+import { fetchAll } from '@/lib/fetch-all';
 
 /** Buat link pribadi untuk semua responden aktif yang sesuai sasaran angket. */
 export async function generateTokens(formId: string): Promise<ActionResult> {
@@ -12,19 +13,12 @@ export async function generateTokens(formId: string): Promise<ActionResult> {
   const { data: form } = await supabase.from('forms').select('targets').eq('id', formId).single();
   if (!form) return { ok: false, error: 'Angket tidak ditemukan.' };
 
-  const { data: people, error: pErr } = await supabase
-    .from('respondents')
-    .select('id')
-    .eq('active', true)
-    .in('role', form.targets as string[])
-    .range(0, 9999);
-  if (pErr) return { ok: false, error: pErr.message };
-
-  const { data: existing } = await supabase
-    .from('access_tokens')
-    .select('respondent_id')
-    .eq('form_id', formId)
-    .range(0, 9999);
+  const people = await fetchAll<{ id: string }>((a, b) =>
+    supabase.from('respondents').select('id').eq('active', true).in('role', form.targets as string[]).order('id').range(a, b),
+  );
+  const existing = await fetchAll<{ respondent_id: string }>((a, b) =>
+    supabase.from('access_tokens').select('respondent_id').eq('form_id', formId).order('id').range(a, b),
+  );
   const have = new Set((existing ?? []).map((e) => e.respondent_id as string));
   const missing = (people ?? []).filter((p) => !have.has(p.id as string));
   if (!missing.length) return { ok: true, message: 'Semua responden sudah punya link.' };

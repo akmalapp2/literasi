@@ -6,6 +6,7 @@ import ConfirmButton from '@/components/ConfirmButton';
 import { requireAdmin } from '@/lib/auth';
 import { ROLE_LABEL, ROLE_SHORT } from '@/lib/text';
 import { ROLES, type Respondent, type Role } from '@/lib/types';
+import { fetchAll } from '@/lib/fetch-all';
 
 export const metadata: Metadata = { title: 'Responden' };
 
@@ -15,16 +16,19 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
   const sp = await searchParams;
   const { supabase } = await requireAdmin();
 
-  let query = supabase.from('respondents').select('*').order('role').order('class_name').order('name').range(0, 4999);
-  if (sp.peran && ROLES.includes(sp.peran as Role)) query = query.eq('role', sp.peran);
-  if (sp.kelas) query = query.eq('class_name', sp.kelas);
-  if (sp.q) {
-    const term = sp.q.replace(/[%,()]/g, ' ').trim();
-    if (term) query = query.or(`name.ilike.%${term}%,identifier.ilike.%${term}%`);
-  }
-  const [{ data }, { data: cls }, counts] = await Promise.all([
-    query,
-    supabase.from('respondents').select('class_name').in('role', ['siswa', 'ortu']).not('class_name', 'is', null).range(0, 4999),
+  const build = (a: number, b: number) => {
+    let query = supabase.from('respondents').select('*').order('role').order('class_name').order('name').order('id').range(a, b);
+    if (sp.peran && ROLES.includes(sp.peran as Role)) query = query.eq('role', sp.peran);
+    if (sp.kelas) query = query.eq('class_name', sp.kelas);
+    if (sp.q) {
+      const term = sp.q.replace(/[%,()]/g, ' ').trim();
+      if (term) query = query.or(`name.ilike.%${term}%,identifier.ilike.%${term}%`);
+    }
+    return query;
+  };
+  const [data, cls, counts] = await Promise.all([
+    fetchAll<Respondent>(build),
+    fetchAll<{ class_name: string }>((a, b) => supabase.from('respondents').select('class_name').in('role', ['siswa', 'ortu']).not('class_name', 'is', null).order('id').range(a, b)),
     Promise.all(ROLES.map((r) => supabase.from('respondents').select('id', { count: 'exact', head: true }).eq('role', r))),
   ]);
   const people = (data ?? []) as Respondent[];
@@ -169,7 +173,6 @@ export default async function RespondentsPage({ searchParams }: { searchParams: 
               </div>
             ))}
           </div>
-          {people.length >= 5000 && <p className="small text-secondary mt-2">Menampilkan 5.000 data pertama. Gunakan pencarian untuk mempersempit.</p>}
         </>
       )}
     </div>

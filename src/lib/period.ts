@@ -70,3 +70,17 @@ export function periodRange(mode: RepeatMode | null | undefined, now: Date = new
   const end = new Date(start.getTime() + (mode === 'mingguan' ? 7 : 1) * 86400000);
   return { start: start.toISOString(), end: end.toISOString() };
 }
+
+/** Rentang waktu (UTC ISO) dari sebuah kunci periode, mis. "W2026-10-05" atau "D2026-10-09". */
+export function rangeOfKey(key: string): { start: string; end: string } | null {
+  if (!/^[WD]\d{4}-\d{2}-\d{2}$/.test(key)) return null;
+  const start = new Date(`${key.slice(1)}T00:00:00+08:00`);
+  const end = new Date(start.getTime() + (key[0] === 'W' ? 7 : 1) * 86400000);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+/** Label pendek untuk sumbu grafik, mis. "5 Okt" (minggu) atau "9 Okt" (hari). */
+export function periodShort(key: string): string {
+  if (!/^[WD]\d{4}-\d{2}-\d{2}$/.test(key)) return key;
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(key.slice(1) + 'T00:00:00Z'));
+}

@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BrandMark } from '@/components/Brand';
 import ResultsCharts, { type QResult } from '@/components/results/ResultsCharts';
+import TrendChart, { type TrendPoint } from '@/components/results/TrendChart';
 import StatusCard from '@/components/StatusCard';
 import { isAdminSession } from '@/lib/auth';
 import { resultsVisible } from '@/lib/form-window';
-import { PERIOD_WORD, periodKey, periodLabel, periodRange } from '@/lib/period';
+import { fetchAll } from '@/lib/fetch-all';
+import { PERIOD_WORD, periodKey, periodLabel, periodShort, rangeOfKey } from '@/lib/period';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ROLE_LABEL, formatDate } from '@/lib/text';
@@ -22,7 +24,7 @@ export default async function HasilPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ peran?: string; kelas?: string }>;
+  searchParams: Promise<{ peran?: string; kelas?: string; periode?: string }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -42,21 +44,51 @@ export default async function HasilPage({
   const peran = ROLES.includes(sp.peran as Role) ? (sp.peran as Role) : null;
   const kelas = sp.kelas?.trim() || null;
 
-  const { data: res } = await db.rpc('form_results', { p_form_id: form.id, p_role: peran, p_class: kelas });
+  // ---------- Periode (untuk angket berulang) ----------
+  const repeat = !!form.repeat_mode && form.repeat_mode !== 'sekali';
+  const unit = form.repeat_mode === 'harian' ? 'Hari' : 'Minggu';
+  let periods: { key: string; n: number }[] = [];
+  let trend: TrendPoint[] = [];
+  let allResp: { submitted_at: string; role: Role | null }[] = [];
+  if (repeat) {
+    allResp = await fetchAll<{ submitted_at: string; role: Role | null }>((a, b) =>
+      db.from('responses').select('submitted_at, role').eq('form_id', form.id).order('submitted_at').range(a, b),
+    );
+    const byKey = new Map<string, Partial<Record<Role, number>>>();
+    for (const x of allResp) {
+      const k = periodKey(form.repeat_mode, x.submitted_at);
+      const c = byKey.get(k) ?? {};
+      if (x.role) c[x.role] = (c[x.role] ?? 0) + 1;
+      byKey.set(k, c);
+    }
+    const keys = [...byKey.keys()].sort();
+    periods = [...keys].reverse().map((k) => ({ key: k, n: Object.values(byKey.get(k) ?? {}).reduce((a, v) => a + (v ?? 0), 0) }));
+    trend = keys.slice(-12).map((k) => ({ key: k, label: periodShort(k), long: periodLabel(k), counts: byKey.get(k) ?? {} }));
+  }
+  const currentKey = repeat ? periodKey(form.repeat_mode) : null;
+  const chosenKey = repeat && sp.periode && rangeOfKey(sp.periode) && sp.periode.startsWith(form.repeat_mode === 'harian' ? 'D' : 'W') ? sp.periode : null;
+  const range = chosenKey ? rangeOfKey(chosenKey) : null;
+  /** Periode yang dipakai untuk angka partisipasi: pilihan pengguna, atau periode sekarang. */
+  const partKey = chosenKey ?? currentKey;
+
+  const { data: res } = await db.rpc('form_results', {
+    p_form_id: form.id, p_role: peran, p_class: kelas, p_from: range?.start ?? null, p_to: range?.end ?? null,
+  });
   const results = (res ?? { total: 0, questions: [] }) as Results;
 
-  const repeat = !!form.repeat_mode && form.repeat_mode !== 'sekali';
   const participation = await Promise.all(
     form.targets.map(async (r) => {
-      let dq = db.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', form.id).eq('role', r);
-      const rg = periodRange(form.repeat_mode);
-      if (rg) dq = dq.gte('submitted_at', rg.start).lt('submitted_at', rg.end);
-      const done = await dq;
+      let done: number;
+      if (repeat) {
+        done = allResp.filter((x) => x.role === r && periodKey(form.repeat_mode, x.submitted_at) === partKey).length;
+      } else {
+        done = (await db.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', form.id).eq('role', r)).count ?? 0;
+      }
       const total =
         r === 'umum'
           ? null
           : (await db.from('respondents').select('id', { count: 'exact', head: true }).eq('role', r).eq('active', true)).count;
-      return { role: r, done: done.count ?? 0, total };
+      return { role: r, done, total };
     }),
   );
   const allDone = participation.reduce((a, p) => a + p.done, 0);
@@ -65,7 +97,9 @@ export default async function HasilPage({
   let classes: string[] = [];
   const classRoles = form.targets.filter((r) => r === 'siswa' || r === 'ortu');
   if (classRoles.length) {
-    const { data: cls } = await db.from('respondents').select('class_name').in('role', classRoles).not('class_name', 'is', null).range(0, 4999);
+    const cls = await fetchAll<{ class_name: string }>((a, b) =>
+      db.from('respondents').select('class_name').in('role', classRoles).not('class_name', 'is', null).order('id').range(a, b),
+    );
     classes = Array.from(new Set<string>((cls ?? []).map((c) => c.class_name as string))).sort((a, b) => a.localeCompare(b, 'id'));
   }
 
@@ -87,8 +121,11 @@ export default async function HasilPage({
           <div className="d-flex flex-wrap gap-4 align-items-center">
             <div>
               <div className="stat-num">{allDone}</div>
-              <div className="text-secondary">{allTotal !== null ? `dari ${allTotal} responden` : 'responden'}{repeat ? ` ${PERIOD_WORD[form.repeat_mode]}` : ''}</div>
-              {repeat && <div className="small text-secondary">{periodLabel(periodKey(form.repeat_mode))}. Grafik di bawah mencakup semua periode.</div>}
+              <div className="text-secondary">
+                {allTotal !== null ? `dari ${allTotal} responden` : 'responden'}
+                {repeat ? (partKey === currentKey ? ` ${PERIOD_WORD[form.repeat_mode]}` : '') : ''}
+              </div>
+              {repeat && partKey && <div className="small text-secondary">{periodLabel(partKey)}</div>}
             </div>
             <div className="flex-grow-1" style={{ minWidth: 240 }}>
               {participation.map((p) => (
@@ -113,14 +150,35 @@ export default async function HasilPage({
                 {classes.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             )}
+            {repeat && periods.length > 0 && (
+              <select name="periode" className="form-select" style={{ maxWidth: 260 }} defaultValue={chosenKey ?? ''} aria-label={`Saring ${unit.toLowerCase()}`}>
+                <option value="">Semua {unit.toLowerCase()} (grafik gabungan)</option>
+                {periods.map((p) => (
+                  <option key={p.key} value={p.key}>{periodLabel(p.key)}{p.key === currentKey ? ' (sekarang)' : ''} · {p.n} jawaban</option>
+                ))}
+              </select>
+            )}
             <button className="btn btn-outline-primary">Terapkan</button>
-            {(peran || kelas) && <Link href={`/hasil/${form.slug}`} className="btn btn-link">Hapus saringan</Link>}
+            {(peran || kelas || chosenKey) && <Link href={`/hasil/${form.slug}`} className="btn btn-link">Hapus saringan</Link>}
             <span className="small text-secondary ms-md-auto">Nama responden tidak pernah ditampilkan.</span>
           </form>
         </div></div>
 
-        {(peran || kelas) && (
-          <p className="small text-secondary">Menampilkan {results.total} jawaban{peran ? ` dari ${ROLE_LABEL[peran]}` : ''}{kelas ? `, kelas ${kelas}` : ''}.</p>
+        {repeat && trend.length > 0 && (
+          <div className="card border-0 shadow-sm mb-3"><div className="card-body p-3 p-md-4">
+            <h2 className="h6 fw-bold mb-1">Tren pengisian per {unit.toLowerCase()}</h2>
+            <div className="small text-secondary mb-3">
+              Jumlah yang mengisi tiap {unit.toLowerCase()}, dipisah per peran{trend.length === 12 ? ` (12 ${unit.toLowerCase()} terakhir)` : ''}.
+            </div>
+            <TrendChart points={trend} roles={form.targets} unit={unit} />
+          </div></div>
+        )}
+
+        {(peran || kelas || chosenKey) && (
+          <p className="small text-secondary">
+            Menampilkan {results.total} jawaban{peran ? ` dari ${ROLE_LABEL[peran]}` : ''}{kelas ? `, kelas ${kelas}` : ''}
+            {chosenKey ? `, ${periodLabel(chosenKey)}` : ''}.
+          </p>
         )}
 
         <ResultsCharts questions={results.questions} hideText={form.hide_text_public && !admin} />

@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import ParticipationPanel, { type Person } from '@/components/admin/ParticipationPanel';
 import TokenManager, { type TokenRow } from '@/components/admin/TokenManager';
+import { fetchAll } from '@/lib/fetch-all';
+import { scheduleText } from '@/lib/form-window';
+import { usedThisPeriod } from '@/lib/period';
 import { requireAdmin } from '@/lib/auth';
 import type { FormRow } from '@/lib/types';
 import { getBaseUrl } from '@/lib/url';
@@ -15,15 +19,25 @@ export default async function TokensPage({ params }: { params: Promise<{ id: str
   if (!data) notFound();
   const form = data as FormRow;
 
-  const [{ data: rows }, { count: eligible }, baseUrl] = await Promise.all([
-    supabase
-      .from('access_tokens')
-      .select('id, token, used_at, respondents(id, name, identifier, role, class_name, subject, phone)')
-      .eq('form_id', id)
-      .range(0, 9999),
-    supabase.from('respondents').select('id', { count: 'exact', head: true }).eq('active', true).in('role', form.targets),
+  const [rows, people, baseUrl] = await Promise.all([
+    fetchAll((a, b) =>
+      supabase
+        .from('access_tokens')
+        .select('id, token, used_at, respondent_id, respondents(id, name, identifier, role, class_name, subject, phone)')
+        .eq('form_id', id)
+        .order('id')
+        .range(a, b),
+    ),
+    fetchAll<Person>((a, b) =>
+      supabase.from('respondents').select('id, name, role, class_name').eq('active', true).in('role', form.targets).order('id').range(a, b),
+    ),
     getBaseUrl(),
   ]);
+  const repeatMode = form.repeat_mode ?? 'sekali';
+  // Sudah mengisi pada periode sekarang (sekali / minggu ini / hari ini), dari waktu pakai link terakhir.
+  const doneIds = (rows as { respondent_id: string; used_at: string | null }[])
+    .filter((t) => usedThisPeriod(repeatMode, t.used_at))
+    .map((t) => t.respondent_id);
 
   const tokens = ((rows ?? []) as unknown as TokenRow[])
     .filter((r) => r.respondents)
@@ -49,7 +63,15 @@ export default async function TokensPage({ params }: { params: Promise<{ id: str
           Link pribadi tetap bisa dipakai, tetapi responden juga bisa masuk lewat <code>{baseUrl}/f/{form.slug}</code>.
         </div>
       )}
-      <TokenManager formId={id} formTitle={form.title} tokens={tokens} eligible={eligible ?? 0} baseUrl={baseUrl} targets={form.targets} repeatMode={form.repeat_mode ?? 'sekali'} />
+      <ParticipationPanel
+        formTitle={form.title}
+        people={people}
+        doneIds={doneIds}
+        repeatMode={repeatMode}
+        entryUrl={form.access_mode === 'token' ? null : `${baseUrl}/f/${form.slug}`}
+        scheduleText={scheduleText(form)}
+      />
+      <TokenManager formId={id} formTitle={form.title} tokens={tokens} eligible={people.length} baseUrl={baseUrl} targets={form.targets} repeatMode={form.repeat_mode ?? 'sekali'} />
     </div>
   );
 }
