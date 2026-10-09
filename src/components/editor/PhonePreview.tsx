@@ -68,7 +68,7 @@ export default function PhonePreview({ brand, q, index, total, design, title }: 
       <div className="hp"><div className="hp-screen">
         <div className="d-flex align-items-center gap-2" style={{ background: 'var(--laut)', color: '#fff', padding: '12px 12px 8px' }}>
           <Logo brand={brand} size={26} />
-          <div className="fw-bold lh-sm" style={{ fontSize: '.8rem' }}>{brand.appName}<div className="brand-sub">{brand.schoolName}</div></div>
+          <div className="fw-bold lh-sm" style={{ fontSize: '.8rem' }}>{brand.appName}{brand.schoolLine && <div className="brand-sub">{brand.schoolLine}</div>}</div>
         </div>
         <div className="seg px-3 py-2" style={{ background: 'var(--laut)' }}>
           {Array.from({ length: total }, (_, i) => <span key={i} className={i < index ? 'done' : ''} />)}
@@ -87,7 +87,7 @@ export default function PhonePreview({ brand, q, index, total, design, title }: 
     <div className="hp"><div className="hp-screen">
       <div className="bg-white border-bottom d-flex align-items-center gap-2 p-2">
         <Logo brand={brand} size={26} />
-        <div className="fw-bold lh-sm" style={{ fontSize: '.8rem' }}>{brand.appName}<div className="text-secondary fw-normal" style={{ fontSize: '.7rem' }}>{brand.schoolName}</div></div>
+        <div className="fw-bold lh-sm" style={{ fontSize: '.8rem' }}>{brand.appName}{brand.schoolLine && <div className="text-secondary fw-normal" style={{ fontSize: '.7rem' }}>{brand.schoolLine}</div>}</div>
       </div>
       <div className="flex-grow-1 overflow-auto p-2" style={{ background: '#EDF2F8' }}>
         <div className="msg bot">

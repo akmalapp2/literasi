@@ -7,7 +7,8 @@ import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { roleDetail } from '@/lib/text';
 import type { FormRow, Question, Role } from '@/lib/types';
-import { PERIOD_WORD, usedThisPeriod } from '@/lib/period';
+import { PERIOD_WORD } from '@/lib/period';
+import { hasFilled } from '@/lib/filled';
 
 export const metadata: Metadata = { title: 'Isi angket', robots: { index: false } };
 
@@ -22,7 +23,7 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
 
   const { data: tok } = await db
     .from('access_tokens')
-    .select('id, used_at, form_id, respondents(name, role, class_name, subject, active)')
+    .select('id, respondent_id, form_id, respondents(name, role, class_name, subject, active)')
     .eq('token', token)
     .maybeSingle();
   if (!tok) {
@@ -32,7 +33,7 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
   const { data: formData } = await db.from('forms').select('*').eq('id', tok.form_id).single();
   const form = formData as FormRow;
 
-  if (usedThisPeriod(form.repeat_mode, tok.used_at)) {
+  if (await hasFilled(db, form.id, tok.respondent_id as string, form.repeat_mode)) {
     const repeat = form.repeat_mode !== 'sekali';
     return (
       <StatusCard brand={brand} icon="bi-check-lg" tone="ok" title={repeat ? `Sudah mengisi ${PERIOD_WORD[form.repeat_mode]}` : 'Jawaban sudah terkirim'}

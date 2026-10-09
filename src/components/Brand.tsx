@@ -8,7 +8,7 @@ export function BrandMark({ brand, size = 40, className = '' }: { brand: Brand; 
       <img className="logo" src={brand.logo} width={size} height={Math.round(size * 0.93)} alt={`Logo ${brand.schoolName}`} />
       <div className="min-w-0">
         <div className="brand-name">{brand.appName}</div>
-        <div className="brand-sub">{brand.schoolName}</div>
+        {brand.schoolLine && <div className="brand-sub">{brand.schoolLine}</div>}
       </div>
     </div>
   );

@@ -235,7 +235,7 @@ export default function DesignB(p: DesignProps) {
         <Logo brand={brand} size={38} alt={`Logo ${brand.schoolName}`} />
         <div className="flex-grow-1 min-w-0">
           <div className="fw-bold lh-sm">{brand.appName}</div>
-          <div className="small text-secondary text-truncate">{brand.schoolName}</div>
+          {brand.schoolLine && <div className="small text-secondary text-truncate">{brand.schoolLine}</div>}
         </div>
         {p.who && (
           <div className="text-end small d-none d-sm-block">

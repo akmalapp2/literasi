@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation';
 import QRCode from 'qrcode';
 import PrintButton from '@/components/admin/PrintButton';
 import { requireAdmin } from '@/lib/auth';
-import { usedThisPeriod, type RepeatMode } from '@/lib/period';
+import type { RepeatMode } from '@/lib/period';
 import { getSettings, toBrand } from '@/lib/settings';
 import { roleDetail } from '@/lib/text';
 import type { Respondent, Role } from '@/lib/types';
 import { getBaseUrl } from '@/lib/url';
 import { fetchAll } from '@/lib/fetch-all';
+import { filledIds } from '@/lib/filled';
 
 export const metadata: Metadata = { title: 'Kartu QR' };
 
@@ -28,12 +29,13 @@ export default async function QrPage({
   const { data: form } = await supabase.from('forms').select('id, title, repeat_mode').eq('id', id).maybeSingle();
   if (!form) notFound();
 
-  const [data, settings, baseUrl] = await Promise.all([
+  const [data, settings, baseUrl, done] = await Promise.all([
     fetchAll((a, b) =>
       supabase.from('access_tokens').select('id, token, used_at, respondents(id, name, identifier, role, class_name, subject, phone)').eq('form_id', id).order('id').range(a, b),
     ),
     getSettings(),
     getBaseUrl(),
+    filledIds(supabase, id, form.repeat_mode as RepeatMode),
   ]);
   const brand = toBrand(settings);
 
@@ -41,7 +43,7 @@ export default async function QrPage({
     .filter((r) => r.respondents)
     .filter((r) => !sp.peran || r.respondents.role === (sp.peran as Role))
     .filter((r) => !sp.kelas || r.respondents.class_name === sp.kelas)
-    .filter((r) => sp.belum !== '1' || !usedThisPeriod(form.repeat_mode as RepeatMode, r.used_at))
+    .filter((r) => sp.belum !== '1' || !done.has(r.respondents.id))
     .sort((a, b) => ((a.respondents.class_name ?? '') + a.respondents.name).localeCompare((b.respondents.class_name ?? '') + b.respondents.name, 'id'));
 
   const cards = await Promise.all(
@@ -74,7 +76,7 @@ export default async function QrPage({
               <div className="d-flex align-items-center gap-2 justify-content-center mb-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={brand.logo} width={26} height={24} alt="" className="logo" />
-                <div className="small fw-bold text-start lh-sm">{brand.appName}<div className="fw-normal text-secondary" style={{ fontSize: '.7rem' }}>{brand.schoolName}</div></div>
+                <div className="small fw-bold text-start lh-sm">{brand.appName}{brand.schoolLine && <div className="fw-normal text-secondary" style={{ fontSize: '.7rem' }}>{brand.schoolLine}</div>}</div>
               </div>
               <div className="small fw-semibold mb-1">{form.title}</div>
               {/* eslint-disable-next-line @next/next/no-img-element */}

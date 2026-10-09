@@ -14,7 +14,9 @@ Satu jenis akun saja: **admin**. Responden mengisi tanpa login.
 - Halaman isi dengan 2 desain: **A. Fokus satu per satu** dan **B. Obrolan**. Bawaan dipilih di Pengaturan, bisa diganti per angket.
 - 3 mode masuk responden per angket: link/QR pribadi (sekali pakai), kode + nomor induk, atau terbuka (+ Cloudflare Turnstile). Pada mode kode & terbuka, responden memilih peran dulu; siswa masuk dengan NIT (Nomor Induk Taruna), guru & kepala sekolah dengan NIP/NUPTK.
 - Data responden: tambah manual atau impor Excel (ada template).
-- Link pribadi: salin, kirim lewat WhatsApp, cetak kartu QR per kelas, buat ulang link, izinkan isi ulang.
+- Link pribadi: salin, kirim lewat WhatsApp, cetak kartu QR per kelas, buat ulang link.
+- Rekap partisipasi per kelas, salin daftar yang belum mengisi (siap tempel ke WhatsApp).
+- Halaman **Jawaban**: lihat jawaban tiap responden (riwayat per minggu), hapus satu jawaban, dan **Isi susulan** oleh admin.
 - Hasil publik tanpa nama, grafik per pertanyaan, saring per peran & kelas.
 - Unduh hasil sebagai **PDF** (kop sekolah, rekap, daftar responden) atau **Excel** (info, rekap, jawaban lengkap), disaring per tanggal pengisian dan per peran.
 - Tampilan responsif (HP, tablet, laptop). Tabel berubah jadi kartu di HP.
@@ -34,7 +36,7 @@ src/lib/                            Supabase client, auth, teks, tipe
 
 ### 1. Supabase
 1. Buat proyek di https://supabase.com (region terdekat: Singapore).
-2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql`, `0003_peran_tambahan.sql`, `0004_identitas_mode_terbuka.sql`, `0005_nama_aplikasi.sql`, `0006_jadwal_mingguan.sql`, `0007_pembuat.sql`, `0008_pengisian_berulang.sql`, `0009_perbaikan_periode.sql`, `0010_hasil_per_periode.sql`, dan `0011_sumber_jawaban.sql`.
+2. **SQL Editor** → tempel isi `supabase/migrations/0001_init.sql` → Run. Lalu lakukan hal yang sama, berurutan, untuk `0002_tanggal_rentang_lainnya.sql`, `0003_peran_tambahan.sql`, `0004_identitas_mode_terbuka.sql`, `0005_nama_aplikasi.sql`, `0006_jadwal_mingguan.sql`, `0007_pembuat.sql`, `0008_pengisian_berulang.sql`, `0009_perbaikan_periode.sql`, `0010_hasil_per_periode.sql`, `0011_sumber_jawaban.sql`, `0012_satu_sumber_status.sql`, dan `0013_sembunyikan_nama_sekolah.sql`.
 3. **Authentication → Users → Add user**: buat akun admin (email + kata sandi, centang *Auto Confirm*).
 4. Jadikan akun itu admin (SQL Editor):
    ```sql
@@ -76,7 +78,7 @@ Buat widget di dasbor Cloudflare → Turnstile, lalu isi `NEXT_PUBLIC_TURNSTILE_
 1. **Responden** → impor Excel (unduh template dulu) atau tambah manual.
 2. **Angket → Buat angket** → susun pertanyaan → tab *Akses & pengaturan* → pilih sasaran, mode masuk, jadwal → ubah status ke **Terbit** → **Simpan**.
 3. **Responden** (tombol di editor) → *Buat link untuk semua responden* → bagikan lewat WhatsApp atau cetak kartu QR per kelas.
-4. Pantau di **/hasil/&lt;alamat-angket&gt;**, unduh CSV bila perlu.
+4. Pantau di **/hasil/&lt;alamat-angket&gt;** atau menu **Jawaban**; unduh PDF/Excel lewat **Unduh hasil**.
 
 ## Keamanan singkat
 - Semua tabel memakai RLS. Hanya pengguna di tabel `admins` yang bisa membaca/mengubah data.
@@ -100,6 +102,13 @@ Proyek Supabase paket gratis di-pause setelah sekitar 7 hari tanpa aktivitas. Ap
 2. **Add New Monitor** → Type: HTTP(s) → URL: `https://ALAMAT-APLIKASI-ANDA.vercel.app/api/health` → Monitoring interval 5–60 menit → **Create**.
 
 Pastikan email akun Supabase aktif dipantau; Supabase mengirim peringatan sebelum mem-pause. Cara paling pasti bebas pause adalah upgrade ke Supabase Pro.
+
+## Status "sudah mengisi"
+Satu-satunya sumber status adalah **data jawaban** (tabel `responses`). Kolom `access_tokens.used_at` hanya catatan waktu terakhir link dipakai.
+Untuk mengisi jawaban yang terlewat, gunakan menu **Jawaban → Isi susulan**; input lewat SQL hanya untuk keadaan darurat.
+
+## Embed ke Blogger
+Gunakan berkas `halaman-blogger-fullpage.html` (mode halaman, layar penuh). Panel admin tetap dibuka langsung di alamat Vercel.
 
 ## Kredit
 Hak cipta © Akmal Iskandar, S.Pi

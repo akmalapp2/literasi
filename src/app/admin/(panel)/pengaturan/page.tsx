@@ -31,6 +31,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             <div className="col-md-6">
               <label className="form-label small fw-semibold" htmlFor="sn">Nama sekolah</label>
               <input id="sn" name="school_name" className="form-control" defaultValue={s.school_name} maxLength={80} />
+              <div className="form-check mt-2">
+                <input className="form-check-input" type="checkbox" id="hsd" name="hide_school_dup" defaultChecked={s.hide_school_dup} />
+                <label className="form-check-label small" htmlFor="hsd">
+                  Sembunyikan baris nama sekolah jika sudah tercantum di nama aplikasi (agar tidak tertulis dua kali)
+                </label>
+              </div>
             </div>
             <div className="col-md-8">
               <label className="form-label small fw-semibold" htmlFor="lg">Ganti logo (PNG/JPG/SVG, maks. 900 KB)</label>

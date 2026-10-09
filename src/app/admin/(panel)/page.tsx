@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createForm, deleteForm } from '@/actions/forms';
 import ConfirmButton from '@/components/ConfirmButton';
 import { requireAdmin } from '@/lib/auth';
-import { scheduleText } from '@/lib/form-window';
+import { formWindow, scheduleText } from '@/lib/form-window';
 import { PERIOD_WORD, REPEAT_LABEL, periodRange } from '@/lib/period';
 import { ROLE_SHORT, formatDay } from '@/lib/text';
 import type { FormRow } from '@/lib/types';
@@ -36,6 +36,12 @@ export default async function Dashboard() {
     }),
   );
   const openCount = forms.filter((f) => f.status === 'terbit').length;
+  /** Terbit, tetapi saat ini tidak bisa diisi karena periode/jadwal. */
+  const windowNote = (f: FormRow) => {
+    if (f.status !== 'terbit') return null;
+    const w = formWindow(f);
+    return w.open ? null : <div className="small text-secondary mt-1"><i className="bi bi-clock me-1" />{w.title}</div>;
+  };
 
   const actions = (f: FormRow) => (
     <div className="d-flex gap-1 flex-wrap justify-content-end">
@@ -102,7 +108,7 @@ export default async function Dashboard() {
                         </div>
                       </td>
                       <td>{f.targets.map((r) => <span key={r} className={`badge-soft role ${r} me-1`}>{ROLE_SHORT[r]}</span>)}</td>
-                      <td><span className={`badge-soft st-${f.status}`}>{STATUS[f.status]}</span></td>
+                      <td><span className={`badge-soft st-${f.status}`}>{STATUS[f.status]}</span>{windowNote(f)}</td>
                       <td>{progress(i)}</td>
                       <td className="text-end pe-3">{actions(f)}</td>
                     </tr>
@@ -117,7 +123,7 @@ export default async function Dashboard() {
               <div key={f.id} className="list-card">
                 <div className="d-flex gap-2 align-items-start mb-2">
                   <Link href={`/admin/angket/${f.id}`} className="fw-semibold text-body text-decoration-none flex-grow-1">{f.title}</Link>
-                  <span className={`badge-soft st-${f.status}`}>{STATUS[f.status]}</span>
+                  <span className={`badge-soft st-${f.status}`}>{STATUS[f.status]}</span>{windowNote(f)}
                 </div>
                 <div className="mb-2">{f.targets.map((r) => <span key={r} className={`badge-soft role ${r} me-1`}>{ROLE_SHORT[r]}</span>)}</div>
                 <div className="d-flex align-items-end gap-2">

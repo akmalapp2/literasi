@@ -89,7 +89,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
 
       const info = [
         [data.brand.appName],
-        [data.brand.schoolName],
+        ...(data.brand.schoolLine ? [[data.brand.schoolLine]] : []),
         [],
         ['Judul', data.form.title],
         ['Saringan', label],
@@ -116,22 +116,6 @@ export default function ReportDownloader({ formId, targets }: Props) {
       wsRekap['!cols'] = [{ wch: 5 }, { wch: 50 }, { wch: 40 }, { wch: 10 }, { wch: 12 }];
       XLSX.utils.book_append_sheet(wb, wsRekap, 'Rekap');
 
-      const repeat = data.form.repeat_mode !== 'sekali';
-      const head = ['No', 'Waktu kirim (WITA)', ...(repeat ? ['Periode'] : []), 'Nama', 'NIT/NIP', 'Peran', 'Kelas/keterangan', ...data.questions.map((q) => q.title)];
-      const body = data.rows.map((r, i) => [
-        i + 1,
-        witaDateTime(r.submitted_at),
-        ...(repeat ? [r.period_key ? periodLabel(r.period_key) : ''] : []),
-        r.name ?? '(anonim)',
-        r.identifier ?? '',
-        r.role ? ROLE_LABEL[r.role] : '',
-        r.class_name ?? '',
-        ...data.questions.map((q) => cellText(q, r.answers[q.id])),
-      ]);
-      const wsData = XLSX.utils.aoa_to_sheet([head, ...body]);
-      wsData['!cols'] = [{ wch: 5 }, { wch: 20 }, ...(repeat ? [{ wch: 28 }] : []), { wch: 26 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, ...data.questions.map(() => ({ wch: 28 }))];
-      XLSX.utils.book_append_sheet(wb, wsData, 'Jawaban');
-
       XLSX.writeFile(wb, `${slugPart(fileBase)}.xlsx`);
     } catch {
       setError('Gagal membuat file Excel.');
@@ -147,7 +131,8 @@ export default function ReportDownloader({ formId, targets }: Props) {
     try {
       const XLSX = await import('xlsx');
       const qTitle = (t: string) => t.replaceAll('{kamu}', 'Anda').replaceAll('{tugas}', 'kegiatan');
-      const head = ['No', 'Nama', 'NIP/NIT', 'Peran', 'Kelas', ...data.questions.map((q, i) => `${i + 1}. ${qTitle(q.title)}`), 'Waktu kirim (WITA)', 'Keterangan'];
+      const repeat = data.form.repeat_mode !== 'sekali';
+      const head = ['No', 'Nama', 'NIP/NIT', 'Peran', 'Kelas', ...data.questions.map((q, i) => `${i + 1}. ${qTitle(q.title)}`), 'Waktu kirim (WITA)', ...(repeat ? ['Periode'] : []), 'Keterangan'];
       const body = data.rows.map((r, i) => [
         i + 1,
         r.name ?? '(anonim)',
@@ -156,10 +141,11 @@ export default function ReportDownloader({ formId, targets }: Props) {
         r.class_name ?? '',
         ...data.questions.map((q) => cellText(q, r.answers[q.id])),
         witaDateTime(r.submitted_at),
+        ...(repeat ? [r.period_key ? periodLabel(r.period_key) : ''] : []),
         r.source === 'admin' ? 'Susulan oleh admin' : '',
       ]);
       const ws = XLSX.utils.aoa_to_sheet([head, ...body]);
-      ws['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, ...data.questions.map(() => ({ wch: 30 })), { wch: 20 }, { wch: 18 }];
+      ws['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, ...data.questions.map(() => ({ wch: 30 })), { wch: 20 }, ...(repeat ? [{ wch: 28 }] : []), { wch: 18 }];
       ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: body.length, c: head.length - 1 } }) };
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Data jawaban');
@@ -190,7 +176,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
       const tx = logo ? M + 22 : M;
       doc.setTextColor(...NAVY);
       doc.setFont('helvetica', 'bold').setFontSize(14).text(pdfSafe(data.brand.appName), tx, 16);
-      doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(90, 102, 121).text(pdfSafe(data.brand.schoolName), tx, 22);
+      doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(90, 102, 121).text(pdfSafe(data.brand.schoolLine ?? ''), tx, 22);
       doc.setDrawColor(245, 196, 0).setLineWidth(1).line(M, 30, W - M, 30);
 
       doc.setTextColor(19, 33, 61).setFont('helvetica', 'bold').setFontSize(13);
@@ -348,7 +334,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
           </button>
         </div>
         <ul className="small text-secondary mt-3 mb-0 ps-3">
-          <li><strong>Excel</strong>: lembar Info, Rekap per pertanyaan, dan Jawaban lengkap tiap responden.</li>
+          <li><strong>Excel</strong>: lembar Info dan Rekap per pertanyaan (jumlah &amp; persen).</li>
           <li><strong>Data jawaban</strong>: satu lembar Excel sederhana, satu baris per responden: Nama, NIP/NIT, Peran, Kelas, lalu seluruh jawabannya. Bisa langsung disaring dan diurutkan.</li>
           <li><strong>PDF</strong>: kop sekolah, rekap per pertanyaan (jumlah &amp; persen), dan daftar responden. Siap dicetak.</li>
         </ul>

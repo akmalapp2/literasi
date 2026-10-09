@@ -2,16 +2,28 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
-import { allowRefill, generateTokens, regenerateToken } from '@/actions/tokens';
+import { generateTokens, regenerateToken } from '@/actions/tokens';
 import CopyButton from '@/components/CopyButton';
-import { PERIOD_WORD, REPEAT_LABEL, periodKey, periodLabel, usedThisPeriod, type RepeatMode } from '@/lib/period';
+import { PERIOD_WORD, REPEAT_LABEL, periodKey, periodLabel, type RepeatMode } from '@/lib/period';
 import Toast, { type ToastMsg } from '@/components/Toast';
-import { ROLE_LABEL, ROLE_SHORT, formatDate, greetingName } from '@/lib/text';
+import { ROLE_LABEL, ROLE_SHORT, greetingName } from '@/lib/text';
 import type { Respondent, Role } from '@/lib/types';
 
 export type TokenRow = { id: string; token: string; used_at: string | null; respondents: Respondent };
 
-type Props = { formId: string; formTitle: string; tokens: TokenRow[]; eligible: number; baseUrl: string; targets: Role[]; repeatMode: RepeatMode };
+type Props = {
+  formId: string;
+  formTitle: string;
+  tokens: TokenRow[];
+  eligible: number;
+  baseUrl: string;
+  targets: Role[];
+  repeatMode: RepeatMode;
+  /** id responden yang sudah mengisi pada periode sekarang (dari data jawaban). */
+  doneIds: string[];
+  /** Saringan awal, mis. dari tautan "Lihat yang belum" di rekap. */
+  initial?: { peran?: string; kelas?: string; status?: string };
+};
 
 function waLink(phone: string | null, text: string) {
   let p = (phone ?? '').replace(/[^\d]/g, '');
@@ -19,14 +31,15 @@ function waLink(phone: string | null, text: string) {
   return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
 }
 
-export default function TokenManager({ formId, formTitle, tokens, eligible, baseUrl, targets, repeatMode }: Props) {
+export default function TokenManager({ formId, formTitle, tokens, eligible, baseUrl, targets, repeatMode, doneIds, initial }: Props) {
+  const doneSet = useMemo(() => new Set(doneIds), [doneIds]);
   /** Sudah mengisi pada periode sekarang (sekali / minggu ini / hari ini). */
-  const isDone = (t: TokenRow) => usedThisPeriod(repeatMode, t.used_at);
+  const isDone = (t: TokenRow) => doneSet.has(t.respondents.id);
   const word = PERIOD_WORD[repeatMode];
   const [q, setQ] = useState('');
-  const [role, setRole] = useState('');
-  const [kelas, setKelas] = useState('');
-  const [status, setStatus] = useState('');
+  const [role, setRole] = useState(initial?.peran ?? '');
+  const [kelas, setKelas] = useState(initial?.kelas ?? '');
+  const [status, setStatus] = useState(initial?.status ?? '');
   const [msg, setMsg] = useState<ToastMsg>(null);
   const [pending, start] = useTransition();
 
@@ -52,7 +65,7 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
 
   const url = (t: TokenRow) => `${baseUrl}/isi/${t.token}`;
   const waText = (t: TokenRow) =>
-    `Yth. ${greetingName(t.respondents.name, t.respondents.role) === 'Bapak/Ibu' ? 'Bapak/Ibu ' + t.respondents.name : t.respondents.name}, mohon mengisi "${formTitle}" melalui link pribadi berikut: ${url(t)} (link hanya untuk Anda dan hanya bisa dipakai sekali). Terima kasih.`;
+    `Yth. ${greetingName(t.respondents.name, t.respondents.role) === 'Bapak/Ibu' ? 'Bapak/Ibu ' + t.respondents.name : t.respondents.name}, mohon mengisi "${formTitle}" melalui link pribadi berikut: ${url(t)} (link hanya untuk Anda${repeatMode === 'mingguan' ? ', bisa dipakai lagi setiap minggu' : repeatMode === 'harian' ? ', bisa dipakai lagi setiap hari' : ' dan hanya bisa dipakai sekali'}). Terima kasih.`;
 
   const qp = new URLSearchParams();
   if (role) qp.set('peran', role);
@@ -60,7 +73,6 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
   if (status === 'belum') qp.set('belum', '1');
   const qrHref = `/admin/angket/${formId}/kartu-qr${qp.toString() ? `?${qp.toString()}` : ''}`;
 
-  const done = tokens.filter(isDone).length;
   const missing = Math.max(0, eligible - tokens.length);
 
   return (
@@ -72,26 +84,6 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
           <strong> {word} ({periodLabel(periodKey(repeatMode))})</strong>. Link yang sama dipakai lagi pada periode berikutnya.
         </div>
       )}
-      <div className="row g-3 mb-3">
-        {targets.map((r) => {
-          const all = tokens.filter((t) => t.respondents.role === r);
-          return (
-            <div key={r} className="col-6 col-md-3">
-              <div className="card border-0 shadow-sm stat-card"><div className="card-body">
-                <div className="small text-secondary">{ROLE_LABEL[r]}</div>
-                <div className="num">{all.filter(isDone).length} / {all.length}</div>
-              </div></div>
-            </div>
-          );
-        })}
-        <div className="col-6 col-md-3">
-          <div className="card border-0 shadow-sm stat-card"><div className="card-body">
-            <div className="small text-secondary">Belum mengisi{word ? ` ${word}` : ''}</div>
-            <div className="num text-danger">{tokens.length - done}</div>
-          </div></div>
-        </div>
-      </div>
-
       <div className="card border-0 shadow-sm mb-3"><div className="card-body d-flex flex-wrap align-items-center gap-2">
         <div className="me-auto small">
           {missing > 0 ? (
@@ -108,6 +100,7 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
         <Link className="btn btn-outline-primary" href={`/admin/angket/${formId}/laporan`}><i className="bi bi-download me-1" />Unduh hasil (PDF/Excel)</Link>
       </div></div>
 
+      <h2 id="daftar" className="h6 fw-bold mb-2" style={{ scrollMarginTop: 80 }}>Daftar link responden</h2>
       <div className="d-flex flex-wrap gap-2 mb-3">
         <input className="form-control" style={{ maxWidth: 260 }} placeholder="Cari nama / NIT / NIP" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Cari" />
         <select className="form-select" style={{ maxWidth: 180 }} value={role} onChange={(e) => setRole(e.target.value)} aria-label="Peran">
@@ -147,7 +140,7 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
                 </div>
                 <code className="small d-none d-lg-inline">/isi/{t.token}</code>
                 {isDone(t) ? (
-                  <span className="badge-soft st-terbit" title={t.used_at ? formatDate(t.used_at) : ''}>Sudah mengisi{word ? ` ${word}` : ''}</span>
+                  <span className="badge-soft st-terbit">Sudah mengisi{word ? ` ${word}` : ''}</span>
                 ) : (
                   <span className="badge-soft st-draf">Belum</span>
                 )}
@@ -167,12 +160,6 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
                         <i className="bi bi-arrow-repeat" />
                       </button>
                     </>
-                  )}
-                  {isDone(t) && (
-                    <button type="button" className="btn btn-sm btn-outline-danger" title="Izinkan isi ulang" aria-label="Izinkan isi ulang" disabled={pending}
-                      onClick={() => window.confirm(`Hapus jawaban ${r.name}${word ? ` ${word}` : ''} agar bisa mengisi ulang? Jawaban itu tidak bisa dikembalikan.`) && run(() => allowRefill(t.id, formId))}>
-                      <i className="bi bi-arrow-counterclockwise" />
-                    </button>
                   )}
                 </div>
               </div>

@@ -8,7 +8,7 @@ export default function EntryHero({ brand, title, step, small = false }: { brand
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="logo" src={brand.logo} width={size} height={Math.round(size * 0.93)} alt={`Logo ${brand.schoolName}`} />
       <h1>{title}</h1>
-      <div className="school">{brand.schoolName}</div>
+      {brand.schoolLine && <div className="school">{brand.schoolLine}</div>}
       {step !== undefined && (
         <div className="stepper" aria-label={`Langkah ${step + 1} dari 3`}>
           {[0, 1, 2].map((i) => <span key={i} className={i <= step ? 'on' : ''} />)}

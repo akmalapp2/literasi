@@ -11,6 +11,7 @@ import AccessPanel from './AccessPanel';
 import CardsView from './CardsView';
 import PanelView from './PanelView';
 import { uid, type QOps } from './shared';
+import { formWindow } from '@/lib/form-window';
 
 type Props = {
   form: FormRow;
@@ -160,6 +161,12 @@ export default function FormEditor({ form, initialQuestions, brand, defaultView,
             <option value="terbit">Terbit</option>
             <option value="ditutup">Ditutup</option>
           </select>
+          {meta.status === 'terbit' && (() => {
+            const w = formWindow(meta);
+            return w.open ? null : (
+              <span className="small text-secondary" title={w.text}><i className="bi bi-clock me-1" />{w.title}</span>
+            );
+          })()}
           <Link
             className="btn btn-sm btn-outline-secondary"
             href={`/admin/angket/${form.id}/pratinjau`}

@@ -72,9 +72,17 @@ export type Settings = {
   default_fill_design: FillDesign;
   editor_view: EditorView;
   creator: string;
+  hide_school_dup: boolean;
 };
 
-export type Brand = { appName: string; schoolName: string; logo: string; creator: string };
+export type Brand = {
+  appName: string;
+  schoolName: string;
+  /** Baris nama sekolah di bawah nama aplikasi; null bila disembunyikan (sudah tercantum di nama aplikasi). */
+  schoolLine: string | null;
+  logo: string;
+  creator: string;
+};
 
 export type Respondent = {
   id: string;

@@ -9,7 +9,8 @@ import { ROLE_LABEL, idShort } from '@/lib/text';
 import { generateToken } from '@/lib/token';
 import { verifyTurnstile } from '@/lib/turnstile';
 import { ROLES, type ActionResult, type Answers, type Question, type Role } from '@/lib/types';
-import { PERIOD_WORD, usedThisPeriod, type RepeatMode } from '@/lib/period';
+import { PERIOD_WORD, type RepeatMode } from '@/lib/period';
+import { hasFilled } from '@/lib/filled';
 
 /* ---------- Masuk dengan nomor induk (mode Kode, atau Terbuka + NIT/NIP) ---------- */
 export type IdentifyInput = { slug: string; role: Role; code?: string | null; identifier: string };
@@ -55,7 +56,7 @@ export async function identify(input: IdentifyInput): Promise<{ error: string }>
     .eq('form_id', form.id)
     .eq('respondent_id', person.id)
     .maybeSingle();
-  if (tok && usedThisPeriod(form.repeat_mode as RepeatMode, tok.used_at as string | null)) {
+  if (await hasFilled(db, form.id, person.id, form.repeat_mode as RepeatMode)) {
     return {
       error: form.repeat_mode === 'sekali'
         ? 'Nomor induk ini sudah dipakai mengisi. Terima kasih.'
@@ -110,12 +111,12 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
   if (token) {
     const { data: tok } = await db
       .from('access_tokens')
-      .select('used_at, respondents(role, active)')
+      .select('respondent_id, respondents(role, active)')
       .eq('token', token)
       .eq('form_id', form.id)
       .maybeSingle();
     if (!tok) return { ok: false, error: ERRORS.TOKEN_TIDAK_VALID };
-    if (usedThisPeriod(form.repeat_mode as RepeatMode, tok.used_at as string | null)) {
+    if (await hasFilled(db, form.id, tok.respondent_id as string, form.repeat_mode as RepeatMode)) {
       return { ok: false, error: form.repeat_mode === 'sekali' ? ERRORS.TOKEN_SUDAH_DIPAKAI : `Anda sudah mengisi ${PERIOD_WORD[form.repeat_mode as RepeatMode]}.` };
     }
     const r = tok.respondents as unknown as { role: Role; active: boolean } | null;

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { PERIOD_WORD, periodKey, periodLabel, type RepeatMode } from '@/lib/period';
 import { ROLE_LABEL, usesClass } from '@/lib/text';
@@ -8,6 +9,7 @@ import { ROLES, type Role } from '@/lib/types';
 export type Person = { id: string; name: string; role: Role; class_name: string | null };
 
 type Props = {
+  formId: string;
   formTitle: string;
   people: Person[];
   /** id responden yang sudah mengisi pada periode sekarang. */
@@ -18,7 +20,7 @@ type Props = {
   scheduleText: string;
 };
 
-type Group = { key: string; label: string; people: Person[]; done: number };
+type Group = { key: string; label: string; people: Person[]; done: number; role: Role; kelas: string | null };
 
 async function copy(text: string): Promise<boolean> {
   try {
@@ -31,7 +33,7 @@ async function copy(text: string): Promise<boolean> {
 }
 
 /** Rekap partisipasi per kelas/peran + salin daftar yang belum mengisi. */
-export default function ParticipationPanel({ formTitle, people, doneIds, repeatMode, entryUrl, scheduleText }: Props) {
+export default function ParticipationPanel({ formId, formTitle, people, doneIds, repeatMode, entryUrl, scheduleText }: Props) {
   const done = useMemo(() => new Set(doneIds), [doneIds]);
   const [copied, setCopied] = useState<string | null>(null);
   const [sortLow, setSortLow] = useState(false);
@@ -52,10 +54,10 @@ export default function ParticipationPanel({ formTitle, people, doneIds, repeatM
         const keys = [...byClass.keys()].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
         for (const k of keys) {
           const list = byClass.get(k)!;
-          out.push({ key: `${r}:${k}`, label: r === 'siswa' ? `Kelas ${k}` : `${ROLE_LABEL[r]} kelas ${k}`, people: list, done: list.filter((p) => done.has(p.id)).length });
+          out.push({ key: `${r}:${k}`, label: r === 'siswa' ? `Kelas ${k}` : `${ROLE_LABEL[r]} kelas ${k}`, people: list, done: list.filter((p) => done.has(p.id)).length, role: r, kelas: k === '(tanpa kelas)' ? null : k });
         }
       } else {
-        out.push({ key: r, label: ROLE_LABEL[r], people: inRole, done: inRole.filter((p) => done.has(p.id)).length });
+        out.push({ key: r, label: ROLE_LABEL[r], people: inRole, done: inRole.filter((p) => done.has(p.id)).length, role: r, kelas: null });
       }
     }
     return out;
@@ -113,7 +115,7 @@ export default function ParticipationPanel({ formTitle, people, doneIds, repeatM
       </div>
       <div className="small text-secondary mb-3">
         {period ? `${period}. ` : ''}{totalDone} dari {total} sudah mengisi ({pct(totalDone, total)}%).
-        Tombol salin menghasilkan teks siap tempel ke grup WhatsApp.
+        Ikon daftar menampilkan siapa saja yang belum mengisi; ikon salin menyalin daftarnya untuk grup WhatsApp.
       </div>
 
       <div className="table-responsive">
@@ -125,7 +127,7 @@ export default function ParticipationPanel({ formTitle, people, doneIds, repeatM
               <th className="text-end">Sudah</th>
               <th className="text-end">Belum</th>
               <th style={{ minWidth: 140 }}>Persentase</th>
-              <th className="text-end">Salin</th>
+              <th className="text-end">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -146,7 +148,12 @@ export default function ParticipationPanel({ formTitle, people, doneIds, repeatM
                       <span className="small fw-semibold" style={{ width: 38, textAlign: 'right' }}>{p}%</span>
                     </div>
                   </td>
-                  <td className="text-end">
+                  <td className="text-end text-nowrap">
+                    <Link className={`btn btn-sm btn-outline-secondary icon-btn me-1 ${belum ? '' : 'disabled'}`}
+                      href={`/admin/angket/${formId}/responden?${new URLSearchParams({ peran: g.role, ...(g.kelas ? { kelas: g.kelas } : {}), status: 'belum' }).toString()}#daftar`}
+                      title={`Lihat ${g.label} yang belum mengisi`} aria-label={`Lihat ${g.label} yang belum mengisi`}>
+                      <i className="bi bi-list-ul" />
+                    </Link>
                     <button type="button" className="btn btn-sm btn-outline-secondary icon-btn" disabled={!belum}
                       title={belum ? `Salin daftar ${g.label} yang belum mengisi` : 'Semua sudah mengisi'} aria-label={`Salin daftar ${g.label}`}
                       onClick={() => doCopy(g.key, [g])}>

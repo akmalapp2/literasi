@@ -5,21 +5,29 @@ import ParticipationPanel, { type Person } from '@/components/admin/Participatio
 import TokenManager, { type TokenRow } from '@/components/admin/TokenManager';
 import { fetchAll } from '@/lib/fetch-all';
 import { scheduleText } from '@/lib/form-window';
-import { usedThisPeriod } from '@/lib/period';
+import { filledIds } from '@/lib/filled';
 import { requireAdmin } from '@/lib/auth';
 import type { FormRow } from '@/lib/types';
 import { getBaseUrl } from '@/lib/url';
 
 export const metadata: Metadata = { title: 'Link responden' };
 
-export default async function TokensPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TokensPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ peran?: string; kelas?: string; status?: string }>;
+}) {
   const { id } = await params;
+  const sp = await searchParams;
   const { supabase } = await requireAdmin();
   const { data } = await supabase.from('forms').select('*').eq('id', id).maybeSingle();
   if (!data) notFound();
   const form = data as FormRow;
 
-  const [rows, people, baseUrl] = await Promise.all([
+  const repeatMode = form.repeat_mode ?? 'sekali';
+  const [rows, people, baseUrl, done] = await Promise.all([
     fetchAll((a, b) =>
       supabase
         .from('access_tokens')
@@ -32,12 +40,11 @@ export default async function TokensPage({ params }: { params: Promise<{ id: str
       supabase.from('respondents').select('id, name, role, class_name').eq('active', true).in('role', form.targets).order('id').range(a, b),
     ),
     getBaseUrl(),
+    filledIds(supabase, id, repeatMode),
   ]);
-  const repeatMode = form.repeat_mode ?? 'sekali';
-  // Sudah mengisi pada periode sekarang (sekali / minggu ini / hari ini), dari waktu pakai link terakhir.
-  const doneIds = (rows as { respondent_id: string; used_at: string | null }[])
-    .filter((t) => usedThisPeriod(repeatMode, t.used_at))
-    .map((t) => t.respondent_id);
+  // Sudah mengisi = punya jawaban pada periode sekarang (satu sumber: data jawaban).
+  const doneIds = [...done];
+  const initial = { peran: sp.peran ?? '', kelas: sp.kelas ?? '', status: sp.status ?? '' };
 
   const tokens = ((rows ?? []) as unknown as TokenRow[])
     .filter((r) => r.respondents)
@@ -59,7 +66,7 @@ export default async function TokensPage({ params }: { params: Promise<{ id: str
       </div>
       {form.access_mode !== 'token' && (
         <div className="alert alert-info small">
-          Angket ini memakai mode <strong>{form.access_mode === 'kode' ? 'Kode + nomor induk' : 'Terbuka, anonim'}</strong>.
+          Angket ini memakai mode <strong>{form.access_mode === 'kode' ? 'Kode + nomor induk' : 'Terbuka'}</strong>.
           Link pribadi tetap bisa dipakai, tetapi responden juga bisa masuk lewat <code>{baseUrl}/f/{form.slug}</code>.
         </div>
       )}
@@ -70,8 +77,13 @@ export default async function TokensPage({ params }: { params: Promise<{ id: str
         repeatMode={repeatMode}
         entryUrl={form.access_mode === 'token' ? null : `${baseUrl}/f/${form.slug}`}
         scheduleText={scheduleText(form)}
+        formId={id}
       />
-      <TokenManager formId={id} formTitle={form.title} tokens={tokens} eligible={people.length} baseUrl={baseUrl} targets={form.targets} repeatMode={form.repeat_mode ?? 'sekali'} />
+      <TokenManager
+        key={`${initial.peran}|${initial.kelas}|${initial.status}`}
+        initial={initial}
+        doneIds={doneIds}
+        formId={id} formTitle={form.title} tokens={tokens} eligible={people.length} baseUrl={baseUrl} targets={form.targets} repeatMode={form.repeat_mode ?? 'sekali'} />
     </div>
   );
 }

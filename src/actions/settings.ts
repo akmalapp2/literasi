@@ -15,6 +15,7 @@ export async function saveSettings(formData: FormData) {
     default_fill_design: s('default_fill_design') === 'B' ? 'B' : 'A',
     editor_view: s('editor_view') === 'kartu' ? 'kartu' : 'panel',
     creator: s('creator'),
+    hide_school_dup: formData.get('hide_school_dup') === 'on',
     updated_at: new Date().toISOString(),
   };
 
