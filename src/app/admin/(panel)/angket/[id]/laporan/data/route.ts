@@ -88,6 +88,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     answers: answers.get(r.id) ?? {},
   }));
 
+  // Urutan: Kepala Sekolah, Guru, Tenaga Kependidikan, Siswa, (lalu peran lain);
+  // dalam satu peran: kelas, nama, lalu waktu kirim.
+  const roleRank = (r: Role | null) => (r ? ROLES.indexOf(r) : ROLES.length);
+  rows.sort(
+    (a, b) =>
+      roleRank(a.role) - roleRank(b.role) ||
+      (a.class_name ?? '').localeCompare(b.class_name ?? '', 'id', { numeric: true }) ||
+      (a.name ?? '').localeCompare(b.name ?? '', 'id') ||
+      a.submitted_at.localeCompare(b.submitted_at),
+  );
+
   const body: ReportData = {
     form: { title: form.title as string, slug: form.slug as string, targets: form.targets as Role[], repeat_mode: (form.repeat_mode ?? 'sekali') as RepeatMode },
     brand: toBrand(await getSettings()),
