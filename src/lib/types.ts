@@ -1,3 +1,5 @@
+import type { RepeatMode } from './period';
+
 export type Role = 'kepsek' | 'guru' | 'tendik' | 'siswa' | 'ortu' | 'alumni' | 'umum';
 export const ROLES: Role[] = ['kepsek', 'guru', 'tendik', 'siswa', 'ortu', 'alumni', 'umum'];
 
@@ -47,6 +49,8 @@ export type FormMeta = {
   closes_at: string | null;
   /** Hari buka mingguan: 0=Minggu … 6=Sabtu. Kosong = setiap hari. */
   open_days: number[];
+  /** Pengisian berulang: sekali selamanya, sekali per minggu, atau sekali per hari. */
+  repeat_mode: RepeatMode;
   /** Jam buka/tutup harian (WITA), format "HH:MM". */
   open_time: string | null;
   close_time: string | null;

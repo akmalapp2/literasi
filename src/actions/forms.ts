@@ -22,6 +22,7 @@ const metaSchema = z.object({
   fill_design: z.enum(['ikut', 'A', 'B']),
   opens_at: z.string().nullable(),
   closes_at: z.string().nullable(),
+  repeat_mode: z.enum(['sekali', 'mingguan', 'harian']),
   open_days: z.array(z.number().int().min(0).max(6)).max(7),
   open_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Jam buka tidak valid.').nullable(),
   close_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Jam tutup tidak valid.').nullable(),

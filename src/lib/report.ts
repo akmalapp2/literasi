@@ -1,10 +1,12 @@
 import { endLabel, formatDateId, startLabel } from './answers';
 import { ROLE_LABEL } from './text';
+import type { RepeatMode } from './period';
 import type { QSettings, QType, Role } from './types';
 
 /** Satu baris jawaban untuk laporan. */
 export type ReportRow = {
   submitted_at: string;
+  period_key: string | null;
   name: string | null;
   identifier: string | null;
   role: Role | null;
@@ -13,7 +15,7 @@ export type ReportRow = {
 };
 export type ReportQuestion = { id: string; type: QType; title: string; options: string[]; settings: QSettings | null };
 export type ReportData = {
-  form: { title: string; slug: string; targets: Role[] };
+  form: { title: string; slug: string; targets: Role[]; repeat_mode: RepeatMode };
   brand: { appName: string; schoolName: string; logo: string; creator: string };
   questions: ReportQuestion[];
   /** Semua tanggal pengisian (WITA) beserta jumlah jawaban, tanpa saringan. */

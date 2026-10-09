@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import FillApp from '@/components/fill/FillApp';
 import StatusCard from '@/components/StatusCard';
-import { formWindow, resultsVisible } from '@/lib/form-window';
+import { formWindow, resultsVisible, scheduleText } from '@/lib/form-window';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { roleDetail } from '@/lib/text';
 import type { FormRow, Question, Role } from '@/lib/types';
+import { PERIOD_WORD, usedThisPeriod } from '@/lib/period';
 
 export const metadata: Metadata = { title: 'Isi angket', robots: { index: false } };
 
@@ -31,9 +32,13 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
   const { data: formData } = await db.from('forms').select('*').eq('id', tok.form_id).single();
   const form = formData as FormRow;
 
-  if (tok.used_at) {
+  if (usedThisPeriod(form.repeat_mode, tok.used_at)) {
+    const repeat = form.repeat_mode !== 'sekali';
     return (
-      <StatusCard brand={brand} icon="bi-check-lg" tone="ok" title="Jawaban sudah terkirim" text="Terima kasih. Setiap link hanya bisa dipakai satu kali.">
+      <StatusCard brand={brand} icon="bi-check-lg" tone="ok" title={repeat ? `Sudah mengisi ${PERIOD_WORD[form.repeat_mode]}` : 'Jawaban sudah terkirim'}
+        text={repeat
+          ? `Terima kasih. Link ini bisa dipakai lagi ${form.repeat_mode === 'mingguan' ? 'minggu depan' : 'besok'}${scheduleText(form) ? `, sesuai jadwal ${scheduleText(form)}` : ''}.`
+          : 'Terima kasih. Setiap link hanya bisa dipakai satu kali.'}>
         {resultsVisible(form) && <Link className="btn btn-outline-primary" href={`/hasil/${form.slug}`}>Lihat hasil angket</Link>}
       </StatusCard>
     );

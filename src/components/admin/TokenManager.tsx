@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { allowRefill, generateTokens, regenerateToken } from '@/actions/tokens';
 import CopyButton from '@/components/CopyButton';
+import { PERIOD_WORD, REPEAT_LABEL, periodKey, periodLabel, usedThisPeriod, type RepeatMode } from '@/lib/period';
 import Toast, { type ToastMsg } from '@/components/Toast';
 import { ROLE_LABEL, ROLE_SHORT, formatDate, greetingName } from '@/lib/text';
 import type { Respondent, Role } from '@/lib/types';
 
 export type TokenRow = { id: string; token: string; used_at: string | null; respondents: Respondent };
 
-type Props = { formId: string; formTitle: string; tokens: TokenRow[]; eligible: number; baseUrl: string; targets: Role[] };
+type Props = { formId: string; formTitle: string; tokens: TokenRow[]; eligible: number; baseUrl: string; targets: Role[]; repeatMode: RepeatMode };
 
 function waLink(phone: string | null, text: string) {
   let p = (phone ?? '').replace(/[^\d]/g, '');
@@ -18,7 +19,10 @@ function waLink(phone: string | null, text: string) {
   return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
 }
 
-export default function TokenManager({ formId, formTitle, tokens, eligible, baseUrl, targets }: Props) {
+export default function TokenManager({ formId, formTitle, tokens, eligible, baseUrl, targets, repeatMode }: Props) {
+  /** Sudah mengisi pada periode sekarang (sekali / minggu ini / hari ini). */
+  const isDone = (t: TokenRow) => usedThisPeriod(repeatMode, t.used_at);
+  const word = PERIOD_WORD[repeatMode];
   const [q, setQ] = useState('');
   const [role, setRole] = useState('');
   const [kelas, setKelas] = useState('');
@@ -34,8 +38,8 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
     const r = t.respondents;
     if (role && r.role !== role) return false;
     if (kelas && r.class_name !== kelas) return false;
-    if (status === 'sudah' && !t.used_at) return false;
-    if (status === 'belum' && t.used_at) return false;
+    if (status === 'sudah' && !isDone(t)) return false;
+    if (status === 'belum' && isDone(t)) return false;
     if (q && !`${r.name} ${r.identifier}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
@@ -56,11 +60,18 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
   if (status === 'belum') qp.set('belum', '1');
   const qrHref = `/admin/angket/${formId}/kartu-qr${qp.toString() ? `?${qp.toString()}` : ''}`;
 
-  const done = tokens.filter((t) => t.used_at).length;
+  const done = tokens.filter(isDone).length;
   const missing = Math.max(0, eligible - tokens.length);
 
   return (
     <>
+      {repeatMode !== 'sekali' && (
+        <div className="alert alert-info small py-2">
+          <i className="bi bi-arrow-repeat me-1" />
+          Angket ini diisi <strong>{REPEAT_LABEL[repeatMode].toLowerCase()}</strong>. Status di bawah menunjukkan pengisian
+          <strong> {word} ({periodLabel(periodKey(repeatMode))})</strong>. Link yang sama dipakai lagi pada periode berikutnya.
+        </div>
+      )}
       <div className="row g-3 mb-3">
         {targets.map((r) => {
           const all = tokens.filter((t) => t.respondents.role === r);
@@ -68,14 +79,14 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
             <div key={r} className="col-6 col-md-3">
               <div className="card border-0 shadow-sm stat-card"><div className="card-body">
                 <div className="small text-secondary">{ROLE_LABEL[r]}</div>
-                <div className="num">{all.filter((t) => t.used_at).length} / {all.length}</div>
+                <div className="num">{all.filter(isDone).length} / {all.length}</div>
               </div></div>
             </div>
           );
         })}
         <div className="col-6 col-md-3">
           <div className="card border-0 shadow-sm stat-card"><div className="card-body">
-            <div className="small text-secondary">Belum mengisi</div>
+            <div className="small text-secondary">Belum mengisi{word ? ` ${word}` : ''}</div>
             <div className="num text-danger">{tokens.length - done}</div>
           </div></div>
         </div>
@@ -111,8 +122,8 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
         )}
         <select className="form-select" style={{ maxWidth: 170 }} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status">
           <option value="">Semua status</option>
-          <option value="belum">Belum mengisi</option>
-          <option value="sudah">Sudah mengisi</option>
+          <option value="belum">Belum mengisi{word ? ` ${word}` : ''}</option>
+          <option value="sudah">Sudah mengisi{word ? ` ${word}` : ''}</option>
         </select>
       </div>
 
@@ -135,13 +146,13 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
                   </div>
                 </div>
                 <code className="small d-none d-lg-inline">/isi/{t.token}</code>
-                {t.used_at ? (
-                  <span className="badge-soft st-terbit" title={formatDate(t.used_at)}>Sudah mengisi</span>
+                {isDone(t) ? (
+                  <span className="badge-soft st-terbit" title={t.used_at ? formatDate(t.used_at) : ''}>Sudah mengisi{word ? ` ${word}` : ''}</span>
                 ) : (
                   <span className="badge-soft st-draf">Belum</span>
                 )}
                 <div className="d-flex gap-1">
-                  {!t.used_at && (
+                  {!isDone(t) && (
                     <>
                       <CopyButton text={url(t)} />
                       <a className={`btn btn-sm btn-outline-secondary ${r.phone ? '' : 'disabled'}`} href={r.phone ? waLink(r.phone, waText(t)) : undefined}
@@ -154,9 +165,9 @@ export default function TokenManager({ formId, formTitle, tokens, eligible, base
                       </button>
                     </>
                   )}
-                  {t.used_at && (
+                  {isDone(t) && (
                     <button type="button" className="btn btn-sm btn-outline-danger" title="Izinkan isi ulang" aria-label="Izinkan isi ulang" disabled={pending}
-                      onClick={() => window.confirm(`Hapus jawaban ${r.name} agar bisa mengisi ulang? Jawaban lama tidak bisa dikembalikan.`) && run(() => allowRefill(t.id, formId))}>
+                      onClick={() => window.confirm(`Hapus jawaban ${r.name}${word ? ` ${word}` : ''} agar bisa mengisi ulang? Jawaban itu tidak bisa dikembalikan.`) && run(() => allowRefill(t.id, formId))}>
                       <i className="bi bi-arrow-counterclockwise" />
                     </button>
                   )}

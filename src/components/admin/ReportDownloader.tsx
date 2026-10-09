@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { REPEAT_LABEL, periodLabel } from '@/lib/period';
 import { ROLE_LABEL } from '@/lib/text';
 import { formatDateId } from '@/lib/answers';
 import { cellText, filterLabel, roleCounts, summarize, witaDateTime, type ReportData } from '@/lib/report';
@@ -92,6 +93,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
         [],
         ['Judul', data.form.title],
         ['Saringan', label],
+        ['Pengisian', REPEAT_LABEL[data.form.repeat_mode]],
         ['Jumlah responden', data.rows.length],
         ...roleCounts(data.rows).map((r) => [`  ${ROLE_LABEL[r.role]}`, r.n]),
         ['Diunduh', witaDateTime(new Date().toISOString()) + ' WITA'],
@@ -114,10 +116,12 @@ export default function ReportDownloader({ formId, targets }: Props) {
       wsRekap['!cols'] = [{ wch: 5 }, { wch: 50 }, { wch: 40 }, { wch: 10 }, { wch: 12 }];
       XLSX.utils.book_append_sheet(wb, wsRekap, 'Rekap');
 
-      const head = ['No', 'Waktu kirim (WITA)', 'Nama', 'NIT/NIP', 'Peran', 'Kelas/keterangan', ...data.questions.map((q) => q.title)];
+      const repeat = data.form.repeat_mode !== 'sekali';
+      const head = ['No', 'Waktu kirim (WITA)', ...(repeat ? ['Periode'] : []), 'Nama', 'NIT/NIP', 'Peran', 'Kelas/keterangan', ...data.questions.map((q) => q.title)];
       const body = data.rows.map((r, i) => [
         i + 1,
         witaDateTime(r.submitted_at),
+        ...(repeat ? [r.period_key ? periodLabel(r.period_key) : ''] : []),
         r.name ?? '(anonim)',
         r.identifier ?? '',
         r.role ? ROLE_LABEL[r.role] : '',
@@ -125,7 +129,7 @@ export default function ReportDownloader({ formId, targets }: Props) {
         ...data.questions.map((q) => cellText(q, r.answers[q.id])),
       ]);
       const wsData = XLSX.utils.aoa_to_sheet([head, ...body]);
-      wsData['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 26 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, ...data.questions.map(() => ({ wch: 28 }))];
+      wsData['!cols'] = [{ wch: 5 }, { wch: 20 }, ...(repeat ? [{ wch: 28 }] : []), { wch: 26 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, ...data.questions.map(() => ({ wch: 28 }))];
       XLSX.utils.book_append_sheet(wb, wsData, 'Jawaban');
 
       XLSX.writeFile(wb, `${slugPart(fileBase)}.xlsx`);

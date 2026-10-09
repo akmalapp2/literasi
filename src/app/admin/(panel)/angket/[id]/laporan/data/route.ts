@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createClient } from '@/lib/supabase/server';
 import { witaDate, type ReportData, type ReportRow } from '@/lib/report';
+import type { RepeatMode } from '@/lib/period';
 import { ROLES, type Role } from '@/lib/types';
 
 type Resp = {
@@ -9,6 +10,7 @@ type Resp = {
   role: Role | null;
   class_name: string | null;
   submitted_at: string;
+  period_key: string | null;
   respondents: { name: string; identifier: string } | null;
 };
 type Ans = { response_id: string; question_id: string; value_text: string | null; value_list: string[] | null };
@@ -27,7 +29,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const to = DATE_RE.test(sp.get('to') ?? '') ? sp.get('to') : null;
   const peran = ROLES.includes(sp.get('peran') as Role) ? (sp.get('peran') as Role) : null;
 
-  const { data: form } = await supabase.from('forms').select('title, slug, targets').eq('id', id).maybeSingle();
+  const { data: form } = await supabase.from('forms').select('title, slug, targets, repeat_mode').eq('id', id).maybeSingle();
   if (!form) return NextResponse.json({ error: 'Angket tidak ditemukan' }, { status: 404 });
   const { data: qs } = await supabase.from('questions').select('id, type, title, options, settings').eq('form_id', id).order('position');
 
@@ -47,7 +49,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   for (let f = 0; ; f += 1000) {
     let q = supabase
       .from('responses')
-      .select('id, role, class_name, submitted_at, respondents(name, identifier)')
+      .select('id, role, class_name, submitted_at, period_key, respondents(name, identifier)')
       .eq('form_id', id);
     if (from) q = q.gte('submitted_at', `${from}T00:00:00+08:00`);
     if (to) q = q.lte('submitted_at', `${to}T23:59:59.999+08:00`);
@@ -78,6 +80,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const rows: ReportRow[] = responses.map((r) => ({
     submitted_at: r.submitted_at,
+    period_key: r.period_key,
     name: r.respondents?.name ?? null,
     identifier: r.respondents?.identifier ?? null,
     role: r.role,
@@ -86,7 +89,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }));
 
   const body: ReportData = {
-    form: { title: form.title as string, slug: form.slug as string, targets: form.targets as Role[] },
+    form: { title: form.title as string, slug: form.slug as string, targets: form.targets as Role[], repeat_mode: (form.repeat_mode ?? 'sekali') as RepeatMode },
     brand: toBrand(await getSettings()),
     questions: (qs ?? []).map((q) => ({ ...q, settings: q.settings ?? {} })) as ReportData['questions'],
     dates,

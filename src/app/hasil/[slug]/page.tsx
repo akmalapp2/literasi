@@ -6,6 +6,7 @@ import ResultsCharts, { type QResult } from '@/components/results/ResultsCharts'
 import StatusCard from '@/components/StatusCard';
 import { isAdminSession } from '@/lib/auth';
 import { resultsVisible } from '@/lib/form-window';
+import { PERIOD_WORD, periodKey, periodLabel } from '@/lib/period';
 import { getSettings, toBrand } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ROLE_LABEL, formatDate } from '@/lib/text';
@@ -44,9 +45,12 @@ export default async function HasilPage({
   const { data: res } = await db.rpc('form_results', { p_form_id: form.id, p_role: peran, p_class: kelas });
   const results = (res ?? { total: 0, questions: [] }) as Results;
 
+  const repeat = !!form.repeat_mode && form.repeat_mode !== 'sekali';
   const participation = await Promise.all(
     form.targets.map(async (r) => {
-      const done = await db.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', form.id).eq('role', r);
+      let dq = db.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', form.id).eq('role', r);
+      if (repeat) dq = dq.eq('period_key', periodKey(form.repeat_mode));
+      const done = await dq;
       const total =
         r === 'umum'
           ? null
@@ -82,7 +86,8 @@ export default async function HasilPage({
           <div className="d-flex flex-wrap gap-4 align-items-center">
             <div>
               <div className="stat-num">{allDone}</div>
-              <div className="text-secondary">{allTotal !== null ? `dari ${allTotal} responden` : 'responden'}</div>
+              <div className="text-secondary">{allTotal !== null ? `dari ${allTotal} responden` : 'responden'}{repeat ? ` ${PERIOD_WORD[form.repeat_mode]}` : ''}</div>
+              {repeat && <div className="small text-secondary">{periodLabel(periodKey(form.repeat_mode))}. Grafik di bawah mencakup semua periode.</div>}
             </div>
             <div className="flex-grow-1" style={{ minWidth: 240 }}>
               {participation.map((p) => (

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import QRCode from 'qrcode';
 import PrintButton from '@/components/admin/PrintButton';
 import { requireAdmin } from '@/lib/auth';
+import { usedThisPeriod, type RepeatMode } from '@/lib/period';
 import { getSettings, toBrand } from '@/lib/settings';
 import { roleDetail } from '@/lib/text';
 import type { Respondent, Role } from '@/lib/types';
@@ -23,7 +24,7 @@ export default async function QrPage({
   const { id } = await params;
   const sp = await searchParams;
   const { supabase } = await requireAdmin();
-  const { data: form } = await supabase.from('forms').select('id, title').eq('id', id).maybeSingle();
+  const { data: form } = await supabase.from('forms').select('id, title, repeat_mode').eq('id', id).maybeSingle();
   if (!form) notFound();
 
   const [{ data }, settings, baseUrl] = await Promise.all([
@@ -37,7 +38,7 @@ export default async function QrPage({
     .filter((r) => r.respondents)
     .filter((r) => !sp.peran || r.respondents.role === (sp.peran as Role))
     .filter((r) => !sp.kelas || r.respondents.class_name === sp.kelas)
-    .filter((r) => sp.belum !== '1' || !r.used_at)
+    .filter((r) => sp.belum !== '1' || !usedThisPeriod(form.repeat_mode as RepeatMode, r.used_at))
     .sort((a, b) => ((a.respondents.class_name ?? '') + a.respondents.name).localeCompare((b.respondents.class_name ?? '') + b.respondents.name, 'id'));
 
   const cards = await Promise.all(

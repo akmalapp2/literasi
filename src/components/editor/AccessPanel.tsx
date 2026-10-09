@@ -117,6 +117,35 @@ export default function AccessPanel({ formId, meta, setMeta, baseUrl, defaultFil
       </div></div>
 
       <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">
+        <h2 className="h6 fw-bold mb-1">Pengisian berulang</h2>
+        <p className="small text-secondary mb-3">Berapa kali satu orang (satu NIT/NIP) boleh mengisi angket ini.</p>
+        {(
+          [
+            ['sekali', 'Sekali saja', 'Satu orang hanya bisa mengisi satu kali selamanya.'],
+            ['mingguan', 'Sekali setiap minggu', 'Bisa diisi lagi tiap minggu (Senin–Minggu). Cocok dengan jadwal "Setiap Jumat". Jawaban minggu-minggu sebelumnya tetap tersimpan.'],
+            ['harian', 'Sekali setiap hari', 'Bisa diisi lagi setiap hari. Jawaban hari-hari sebelumnya tetap tersimpan.'],
+          ] as const
+        ).map(([v, t, d]) => (
+          <div key={v} className="form-check border rounded-3 p-3 ps-5 mb-2">
+            <input className="form-check-input" type="radio" name="repeat" id={`rep-${v}`} checked={meta.repeat_mode === v}
+              onChange={() => setMeta({ repeat_mode: v })} />
+            <label className="form-check-label w-100" htmlFor={`rep-${v}`}>
+              <span className="fw-semibold">{t}</span>
+              <br />
+              <span className="small text-secondary">{d}</span>
+            </label>
+          </div>
+        ))}
+        {meta.repeat_mode !== 'sekali' && (
+          <div className="alert alert-info small py-2 mt-2 mb-0">
+            <i className="bi bi-arrow-repeat me-1" />
+            Link/QR pribadi tetap sama dan bisa dipakai lagi {meta.repeat_mode === 'mingguan' ? 'minggu' : 'hari'} berikutnya.
+            Hasil per {meta.repeat_mode === 'mingguan' ? 'minggu' : 'hari'} bisa diunduh lewat <strong>Unduh hasil</strong> dengan saringan tanggal.
+          </div>
+        )}
+      </div></div>
+
+      <div className="card border-0 shadow-sm"><div className="card-body p-3 p-md-4">
         <h2 className="h6 fw-bold mb-1">Jadwal</h2>
         <p className="small text-secondary mb-3">Semua kolom opsional. Angket hanya bisa diisi saat statusnya Terbit dan sesuai jadwal di bawah.</p>
 

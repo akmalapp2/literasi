@@ -49,7 +49,7 @@ export default async function TokensPage({ params }: { params: Promise<{ id: str
           Link pribadi tetap bisa dipakai, tetapi responden juga bisa masuk lewat <code>{baseUrl}/f/{form.slug}</code>.
         </div>
       )}
-      <TokenManager formId={id} formTitle={form.title} tokens={tokens} eligible={eligible ?? 0} baseUrl={baseUrl} targets={form.targets} />
+      <TokenManager formId={id} formTitle={form.title} tokens={tokens} eligible={eligible ?? 0} baseUrl={baseUrl} targets={form.targets} repeatMode={form.repeat_mode ?? 'sekali'} />
     </div>
   );
 }

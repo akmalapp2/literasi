@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { generateToken } from '@/lib/token';
 import type { ActionResult } from '@/lib/types';
+import { PERIOD_WORD, periodKey, usedThisPeriod, type RepeatMode } from '@/lib/period';
 
 /** Buat link pribadi untuk semua responden aktif yang sesuai sasaran angket. */
 export async function generateTokens(formId: string): Promise<ActionResult> {
@@ -45,11 +46,17 @@ export async function generateTokens(formId: string): Promise<ActionResult> {
 /** Ganti token (link lama tidak berlaku). Hanya untuk yang belum mengisi. */
 export async function regenerateToken(tokenId: string, formId: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin();
+  const [{ data: form }, { data: tok }] = await Promise.all([
+    supabase.from('forms').select('repeat_mode').eq('id', formId).single(),
+    supabase.from('access_tokens').select('used_at').eq('id', tokenId).single(),
+  ]);
+  if (!tok) return { ok: false, error: 'Link tidak ditemukan.' };
+  if (usedThisPeriod(form?.repeat_mode as RepeatMode, tok.used_at as string | null))
+    return { ok: false, error: 'Responden ini sudah mengisi pada periode ini. Gunakan "Izinkan isi ulang".' };
   const { error } = await supabase
     .from('access_tokens')
     .update({ token: generateToken() })
-    .eq('id', tokenId)
-    .is('used_at', null);
+    .eq('id', tokenId);
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/admin/angket/${formId}/responden`);
   return { ok: true, message: 'Link baru dibuat. Link lama tidak berlaku lagi.' };
@@ -58,14 +65,25 @@ export async function regenerateToken(tokenId: string, formId: string): Promise<
 /** Hapus jawaban responden ini supaya ia bisa mengisi ulang (misalnya salah isi). */
 export async function allowRefill(tokenId: string, formId: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin();
-  const { data: tok } = await supabase.from('access_tokens').select('respondent_id').eq('id', tokenId).single();
+  const [{ data: tok }, { data: form }] = await Promise.all([
+    supabase.from('access_tokens').select('respondent_id').eq('id', tokenId).single(),
+    supabase.from('forms').select('repeat_mode').eq('id', formId).single(),
+  ]);
   if (!tok) return { ok: false, error: 'Link tidak ditemukan.' };
-  await supabase.from('responses').delete().eq('form_id', formId).eq('respondent_id', tok.respondent_id);
+  // Mode berulang: hanya jawaban periode ini yang dihapus; riwayat sebelumnya tetap.
+  let del = supabase.from('responses').delete().eq('form_id', formId).eq('respondent_id', tok.respondent_id);
+  if (form && form.repeat_mode !== 'sekali') del = del.eq('period_key', periodKey(form.repeat_mode as RepeatMode));
+  await del;
   const { error } = await supabase
     .from('access_tokens')
     .update({ used_at: null, token: generateToken() })
     .eq('id', tokenId);
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/admin/angket/${formId}/responden`);
-  return { ok: true, message: 'Jawaban lama dihapus. Kirim link baru ke responden.' };
+  return {
+    ok: true,
+    message: form && form.repeat_mode !== 'sekali'
+      ? `Jawaban ${PERIOD_WORD[form.repeat_mode as RepeatMode]} dihapus. Kirim link baru ke responden.`
+      : 'Jawaban lama dihapus. Kirim link baru ke responden.',
+  };
 }

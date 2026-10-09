@@ -4,6 +4,7 @@ import { createForm, deleteForm } from '@/actions/forms';
 import ConfirmButton from '@/components/ConfirmButton';
 import { requireAdmin } from '@/lib/auth';
 import { scheduleText } from '@/lib/form-window';
+import { PERIOD_WORD, REPEAT_LABEL, periodKey } from '@/lib/period';
 import { ROLE_SHORT, formatDay } from '@/lib/text';
 import type { FormRow } from '@/lib/types';
 
@@ -20,7 +21,10 @@ export default async function Dashboard() {
     forms.map(async (f) => {
       const [q, r, t] = await Promise.all([
         supabase.from('questions').select('id', { count: 'exact', head: true }).eq('form_id', f.id),
-        supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', f.id),
+        // Mode berulang: hitung yang mengisi pada periode sekarang (minggu ini / hari ini).
+        f.repeat_mode && f.repeat_mode !== 'sekali'
+          ? supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', f.id).eq('period_key', periodKey(f.repeat_mode))
+          : supabase.from('responses').select('id', { count: 'exact', head: true }).eq('form_id', f.id),
         f.targets.every((r) => r === 'umum')
           ? Promise.resolve({ count: null as number | null })
           : supabase.from('respondents').select('id', { count: 'exact', head: true }).eq('active', true).in('role', f.targets),
@@ -51,7 +55,7 @@ export default async function Dashboard() {
     const pct = s.t ? Math.round((s.r / s.t) * 100) : 0;
     return (
       <div style={{ minWidth: 150, maxWidth: 240 }}>
-        <div className="small mb-1">{s.r} / {s.t}</div>
+        <div className="small mb-1">{s.r} / {s.t}{forms[i].repeat_mode && forms[i].repeat_mode !== 'sekali' ? <span className="text-secondary"> {PERIOD_WORD[forms[i].repeat_mode]}</span> : null}</div>
         <div className="progress"><div className="progress-bar" style={{ width: `${Math.min(100, pct)}%` }} /></div>
       </div>
     );
@@ -90,7 +94,7 @@ export default async function Dashboard() {
                       <td className="ps-3">
                         <Link href={`/admin/angket/${f.id}`} className="fw-semibold text-body text-decoration-none">{f.title}</Link>
                         <div className="small text-secondary">
-                          {stats[i].q} pertanyaan{scheduleText(f) ? `, ${scheduleText(f)}` : ''}{f.closes_at ? `, ditutup ${formatDay(f.closes_at)}` : ''}
+                          {stats[i].q} pertanyaan{f.repeat_mode && f.repeat_mode !== 'sekali' ? `, ${REPEAT_LABEL[f.repeat_mode].toLowerCase()}` : ''}{scheduleText(f) ? `, ${scheduleText(f)}` : ''}{f.closes_at ? `, ditutup ${formatDay(f.closes_at)}` : ''}
                         </div>
                       </td>
                       <td>{f.targets.map((r) => <span key={r} className={`badge-soft role ${r} me-1`}>{ROLE_SHORT[r]}</span>)}</td>

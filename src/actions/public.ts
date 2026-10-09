@@ -9,6 +9,7 @@ import { ROLE_LABEL, idShort } from '@/lib/text';
 import { generateToken } from '@/lib/token';
 import { verifyTurnstile } from '@/lib/turnstile';
 import { ROLES, type ActionResult, type AnswerValue, type Answers, type Question, type Role } from '@/lib/types';
+import { PERIOD_WORD, usedThisPeriod, type RepeatMode } from '@/lib/period';
 
 /* ---------- Masuk dengan nomor induk (mode Kode, atau Terbuka + NIT/NIP) ---------- */
 export type IdentifyInput = { slug: string; role: Role; code?: string | null; identifier: string };
@@ -24,7 +25,7 @@ export async function identify(input: IdentifyInput): Promise<{ error: string }>
   const db = createAdminClient();
   const { data: form } = await db
     .from('forms')
-    .select('id, access_mode, access_code, open_id, targets, status, opens_at, closes_at, open_days, open_time, close_time')
+    .select('id, access_mode, access_code, open_id, repeat_mode, targets, status, opens_at, closes_at, open_days, open_time, close_time')
     .eq('slug', input.slug)
     .maybeSingle();
   if (!form || form.access_mode === 'token') return { error: 'Angket tidak ditemukan.' };
@@ -54,7 +55,13 @@ export async function identify(input: IdentifyInput): Promise<{ error: string }>
     .eq('form_id', form.id)
     .eq('respondent_id', person.id)
     .maybeSingle();
-  if (tok?.used_at) return { error: 'Nomor induk ini sudah dipakai mengisi. Terima kasih.' };
+  if (tok && usedThisPeriod(form.repeat_mode as RepeatMode, tok.used_at as string | null)) {
+    return {
+      error: form.repeat_mode === 'sekali'
+        ? 'Nomor induk ini sudah dipakai mengisi. Terima kasih.'
+        : `Anda sudah mengisi ${PERIOD_WORD[form.repeat_mode as RepeatMode]}. Silakan kembali ${form.repeat_mode === 'mingguan' ? 'minggu depan' : 'besok'}.`,
+    };
+  }
 
   let token = tok?.token as string | undefined;
   if (!token) {
@@ -126,7 +133,7 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
   const db = createAdminClient();
   const { data: form } = await db
     .from('forms')
-    .select('id, access_mode, open_id, targets, status, opens_at, closes_at, open_days, open_time, close_time')
+    .select('id, access_mode, open_id, repeat_mode, targets, status, opens_at, closes_at, open_days, open_time, close_time')
     .eq('id', input.formId)
     .maybeSingle();
   if (!form) return { ok: false, error: ERRORS.ANGKET_TIDAK_ADA };
@@ -141,7 +148,9 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
       .eq('form_id', form.id)
       .maybeSingle();
     if (!tok) return { ok: false, error: ERRORS.TOKEN_TIDAK_VALID };
-    if (tok.used_at) return { ok: false, error: ERRORS.TOKEN_SUDAH_DIPAKAI };
+    if (usedThisPeriod(form.repeat_mode as RepeatMode, tok.used_at as string | null)) {
+      return { ok: false, error: form.repeat_mode === 'sekali' ? ERRORS.TOKEN_SUDAH_DIPAKAI : `Anda sudah mengisi ${PERIOD_WORD[form.repeat_mode as RepeatMode]}.` };
+    }
     const r = tok.respondents as unknown as { role: Role } | null;
     if (!r) return { ok: false, error: ERRORS.TOKEN_TIDAK_VALID };
     role = r.role;
@@ -178,7 +187,8 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
     p_answers: payload,
   });
   if (error) {
-    if (error.code === '23505') return { ok: false, error: 'Jawaban dari perangkat ini sudah pernah terkirim.' };
+    if (error.code === '23505')
+      return { ok: false, error: form.repeat_mode === 'sekali' ? 'Jawaban dari perangkat ini sudah pernah terkirim.' : `Jawaban dari perangkat ini sudah terkirim ${PERIOD_WORD[form.repeat_mode as RepeatMode]}.` };
     const key = Object.keys(ERRORS).find((k) => error.message.includes(k));
     return { ok: false, error: key ? ERRORS[key] : 'Gagal mengirim jawaban. Periksa koneksi lalu coba lagi.' };
   }
