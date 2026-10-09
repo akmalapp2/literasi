@@ -11,7 +11,7 @@ import { PERIOD_WORD, usedThisPeriod } from '@/lib/period';
 
 export const metadata: Metadata = { title: 'Isi angket', robots: { index: false } };
 
-type Person = { name: string; role: Role; class_name: string | null; subject: string | null };
+type Person = { name: string; role: Role; class_name: string | null; subject: string | null; active: boolean };
 
 export default async function IsiPage({ params }: { params: Promise<{ token: string }> }) {
   const { token: raw } = await params;
@@ -22,7 +22,7 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
 
   const { data: tok } = await db
     .from('access_tokens')
-    .select('id, used_at, form_id, respondents(name, role, class_name, subject)')
+    .select('id, used_at, form_id, respondents(name, role, class_name, subject, active)')
     .eq('token', token)
     .maybeSingle();
   if (!tok) {
@@ -44,10 +44,14 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
     );
   }
 
+  const person = tok.respondents as unknown as Person;
+  if (!person || !person.active) {
+    return <StatusCard brand={brand} icon="bi-person-x" tone="warn" title="Link tidak aktif" text="Data responden untuk link ini sedang dinonaktifkan. Hubungi admin sekolah." />;
+  }
+
   const w = formWindow(form);
   if (!w.open) return <StatusCard brand={brand} icon="bi-clock" title={w.title} text={w.text} />;
 
-  const person = tok.respondents as unknown as Person;
   const { data: qrows } = await db
     .from('questions')
     .select('id, type, title, required, roles, options, settings')
@@ -60,7 +64,7 @@ export default async function IsiPage({ params }: { params: Promise<{ token: str
   return (
     <FillApp
       brand={brand}
-      form={{ id: form.id, title: form.title, description: form.description, slug: form.slug, showResultsLink: resultsVisible(form) }}
+      form={{ id: form.id, title: form.title, description: form.description, slug: form.slug, showResultsLink: resultsVisible(form), repeatMode: form.repeat_mode }}
       questions={(qrows ?? []) as Question[]}
       design={design}
       targets={form.targets}

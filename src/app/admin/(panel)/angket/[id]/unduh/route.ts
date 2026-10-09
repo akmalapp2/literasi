@@ -13,7 +13,9 @@ type Resp = {
 type Ans = { response_id: string; question_id: string; value_text: string | null; value_list: string[] | null };
 
 const csv = (v: unknown) => {
-  const s = v === null || v === undefined ? '' : String(v);
+  let s = v === null || v === undefined ? '' : String(v);
+  // Cegah isian diartikan sebagai rumus saat dibuka di Excel.
+  if (/^[=+@\t]/.test(s)) s = "'" + s;
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 

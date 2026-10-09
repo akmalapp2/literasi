@@ -144,7 +144,7 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
   if (token) {
     const { data: tok } = await db
       .from('access_tokens')
-      .select('used_at, respondents(role)')
+      .select('used_at, respondents(role, active)')
       .eq('token', token)
       .eq('form_id', form.id)
       .maybeSingle();
@@ -152,8 +152,9 @@ export async function submitAnswers(input: SubmitInput): Promise<ActionResult> {
     if (usedThisPeriod(form.repeat_mode as RepeatMode, tok.used_at as string | null)) {
       return { ok: false, error: form.repeat_mode === 'sekali' ? ERRORS.TOKEN_SUDAH_DIPAKAI : `Anda sudah mengisi ${PERIOD_WORD[form.repeat_mode as RepeatMode]}.` };
     }
-    const r = tok.respondents as unknown as { role: Role } | null;
+    const r = tok.respondents as unknown as { role: Role; active: boolean } | null;
     if (!r) return { ok: false, error: ERRORS.TOKEN_TIDAK_VALID };
+    if (!r.active) return { ok: false, error: 'Data responden ini sedang dinonaktifkan. Hubungi admin sekolah.' };
     role = r.role;
   } else {
     if (form.access_mode !== 'terbuka') return { ok: false, error: ERRORS.TOKEN_DIPERLUKAN };

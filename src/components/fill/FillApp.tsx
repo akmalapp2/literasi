@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { submitAnswers } from '@/actions/public';
 import { BrandMark } from '@/components/Brand';
 import { ROLE_LABEL, greetingName } from '@/lib/text';
+import type { RepeatMode } from '@/lib/period';
 import type { AnswerValue, Answers, Brand, FillDesign, Question, Role } from '@/lib/types';
 import DesignA from './DesignA';
 import DesignB from './DesignB';
@@ -15,7 +16,7 @@ import Credit from '@/components/Credit';
 
 type Props = {
   brand: Brand;
-  form: { id: string; title: string; description: string; slug: string; showResultsLink: boolean };
+  form: { id: string; title: string; description: string; slug: string; showResultsLink: boolean; repeatMode?: RepeatMode };
   questions: Question[];
   design: FillDesign;
   targets: Role[];
@@ -101,7 +102,11 @@ export default function FillApp(props: Props) {
           <h1 className="q-big mb-2">Jawaban terkirim</h1>
           <p className="text-secondary">
             Terima kasih{respondent ? `, ${greetingName(respondent.name, respondent.role)}` : ''}.{' '}
-            {mode === 'token' ? 'Link ini sudah tidak bisa dipakai lagi.' : mode === 'preview' ? '(Mode pratinjau, tidak ada yang disimpan.)' : ''}
+            {mode === 'token'
+              ? form.repeatMode === 'mingguan' ? 'Link ini bisa dipakai lagi minggu depan.'
+                : form.repeatMode === 'harian' ? 'Link ini bisa dipakai lagi besok.'
+                : 'Link ini sudah tidak bisa dipakai lagi.'
+              : mode === 'preview' ? '(Mode pratinjau, tidak ada yang disimpan.)' : ''}
           </p>
           {form.showResultsLink && mode !== 'preview' && (
             <Link className="btn btn-outline-primary" href={`/hasil/${form.slug}`}>Lihat hasil sementara</Link>

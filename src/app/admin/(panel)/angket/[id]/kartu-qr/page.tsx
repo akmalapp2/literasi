@@ -59,7 +59,7 @@ export default async function QrPage({
         <PrintButton />
       </div>
       <p className="no-print small text-secondary">
-        Cetak di kertas A4, lalu gunting dan bagikan. Setiap kartu hanya untuk satu orang dan hanya bisa dipakai sekali.
+        Cetak di kertas A4, lalu gunting dan bagikan. Setiap kartu hanya untuk satu orang{form.repeat_mode === 'mingguan' ? ', dan bisa dipakai lagi setiap minggu' : form.repeat_mode === 'harian' ? ', dan bisa dipakai lagi setiap hari' : ' dan hanya bisa dipakai sekali'}.
         {sp.kelas && <> Kelas: <strong>{sp.kelas}</strong>.</>}
       </p>
       {cards.length === 0 ? (
